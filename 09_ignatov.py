@@ -42,7 +42,6 @@ def ignatov(n):
     v_drift = Esum / (e * F * t)
     return v_drift
 
-
 # ドリフト速度の計算
 x = np.array(np.logspace(1, 6, 100), dtype=int) # シミュレーション回数
 y = np.array([ignatov(val_x) for val_x in x]) # ドリフト速度の配列
