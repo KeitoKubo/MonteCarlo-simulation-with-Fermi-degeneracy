@@ -16,10 +16,11 @@ k = np.zeros((2, e_num))
 # EMC
 cur_time = 0  # current time
 time = []
-v_drift = []
+E = []
 while cur_time < sim_time:
     cur_time += delta_t
     time.append(cur_time)
+    Esum = np.array([0.0,0.0])
     for i in range(e_num):
         # free flight
         k[:, i] += e * F[:] / hbar * delta_t
@@ -27,26 +28,30 @@ while cur_time < sim_time:
         rand = random.uniform(0, 1)
         if rand < (delta_t / tau_0):
             k[:, i] = 0
-    vd = hbar * np.mean(k, axis=1) / m_star
-    v_drift.append(vd)
+        Esum += (hbar**2) * (k[:, i]**2) / (2*m_star)
+    Emean = Esum / e_num
+    Emean /= e
+    E.append(Emean)
 time = np.array(time)
-v_drift = np.array(v_drift)
+E = np.array(E)
 
 plt.style.use("scientific")
 fig, ax = plt.subplots()
 
 T0 = 1e-12  # unit of time
-V0 = 1e5    # unit of drift velocity
+V0 = 1e-3    # unit of energy
 
-ax.plot(time / T0, v_drift[:, 0] / V0, c='k')
-ax.plot(time / T0, v_drift[:, 1] / V0, c='b')
+ax.plot(time / T0, E[:, 0] / V0, c='k')
+ax.plot(time / T0, E[:, 1] / V0, c='b')
 
+'''''''''
 # asymptotic line
 v_asym = e * tau_0 / m_star * F
 ax.axhline(v_asym[0] / V0, c='k', ls='dotted')
 ax.axhline(v_asym[1] / V0, c='b', ls='dotted')
+'''
 
 ax.set_xlabel(r"Time (ps)")
-ax.set_ylabel(r"Drift Velocity ($10^5$ m/s)")
+ax.set_ylabel(r"Mean Energy (meV)")
 
 plt.show()

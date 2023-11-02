@@ -46,8 +46,8 @@ ax.plot(x, y)
 plt.xscale('log')
 
 # 軸ラベル
-ax.set_xlabel(r"$x$")
-ax.set_ylabel(r"$y$")
+ax.set_xlabel(r"Scattering Count")
+ax.set_ylabel(r"Drift Velocity$(10^5$ m/s)")
  
 #漸近線
 true_v_drift = e * tau_0 / m_star
