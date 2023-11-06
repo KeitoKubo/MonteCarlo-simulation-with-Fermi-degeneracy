@@ -13,6 +13,8 @@ F = 1e5
 hbar = constants.hbar
 m_star = 0.1 * constants.m_e
 
+e_num = 100
+
 def dispersion(k):
     return hbar * hbar/2 * k * k/m_star
 
@@ -35,11 +37,15 @@ def ezaki_model_func(n):
 # 配列の生成
 x_index = np.arange(0.0,6.0,0.05)
 x = 10 ** x_index
-y = []
+y = [] # 平均をとる
+
 for val_x in x:
-    val = int(val_x)
-    val_y = ezaki_model_func(val)
-    y.append(val_y)
+    val_sum = 0.0
+    for i in range(e_num):
+        val = int(val_x)
+        val_sum += ezaki_model_func(val)
+    val_mean = val_sum / e_num
+    y.append(val_mean)
 
 # 相対誤差の計算
 true_v_drift = e * tau_0 / m_star

@@ -82,7 +82,6 @@ ax.set_ylabel(r"drift velocity $(10^5 m/s)$")
 #漸近線
 true_v_drift = e * tau_0 / m_star
 plt.hlines(true_v_drift,0,x1[len(x1)-1],linestyles='dotted')
-ax.text(19.0,0.6,"asymptotic value : $y$ = " + str(format(true_v_drift, '.2f')))
 
 # 確認
 plt.legend()

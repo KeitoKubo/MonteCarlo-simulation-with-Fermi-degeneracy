@@ -13,6 +13,8 @@ F = 1e5
 hbar = constants.hbar
 m_star = 0.1 * constants.m_e
 
+e_num = 10
+
 def dispersion(k):
     return hbar * hbar/2 * k * k/m_star
 
@@ -35,19 +37,24 @@ def ezaki_model_func(n):
 # 配列の生成
 x_index = np.arange(0.0,6.0,0.05)
 x = 10 ** x_index
-y = []
-for val_x in x:
-    val = int(val_x)
-    val_y = ezaki_model_func(val)
-    y.append(val_y)
+y = [] # 平均をとる
 
-# プロット
+for val_x in x:
+    val_sum = 0.0
+    for i in range(e_num):
+        val = int(val_x)
+        val_sum += ezaki_model_func(val)
+    val_mean = val_sum / e_num
+    y.append(val_mean)
+
+
+# プロットs
 ax.plot(x, y)
 plt.xscale('log')
 
 # 軸ラベル
 ax.set_xlabel(r"Scattering Count")
-ax.set_ylabel(r"Drift Velocity$(10^5$ m/s)")
+ax.set_ylabel(r"Relative Error")
  
 #漸近線
 true_v_drift = e * tau_0 / m_star

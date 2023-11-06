@@ -32,6 +32,8 @@ def ignatov(n):
         k += e * F / hbar * tf
         E1 = dispersion(k)
         # ignatov
+        # we : elastic scattering posibility
+        # wi : inelastic scattering posibility
         if rand() < (we / w0):
             if rand() > 0.5:
                 k = -k
@@ -58,8 +60,8 @@ true_v_drift = e * tau_0 / m_star * F
 ax.axhline(true_v_drift * 1e-5, ls='dotted')
 
 # 軸ラベル
-ax.set_xlabel(r"$x$")
-ax.set_ylabel(r"$y$")
+ax.set_xlabel(r"Scattering Count")
+ax.set_ylabel(r"Drift Velocity$(10^5$ m/s)")
 
 # 確認
 plt.show()
