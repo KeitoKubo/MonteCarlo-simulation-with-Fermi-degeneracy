@@ -9,7 +9,7 @@ tau_i = 5e-12
 we = 1 / tau_e
 wi = 1 / tau_i
 w0 = we + wi
-tau_0 = 1 / w0
+tau_0 = 1 / we
 delta_t = 1e-14
 F = np.array([1e5, 0e5])
 m_star = 0.1 * m_e
@@ -47,10 +47,9 @@ V0 = 1e-3    # unit of energy
 
 ax.plot(time / T0, E / V0, c='k')
 
-'''# asymptotic line
 v_asym = e * tau_0**2 * F**2 / (2*m_star)
 ax.axhline(v_asym[0] / V0, c='k', ls='dotted')
-ax.axhline(v_asym[1] / V0, c='b', ls='dotted')'''
+ax.axhline(v_asym[1] / V0, c='b', ls='dotted')
 
 
 ax.set_xlabel(r"Time (ps)")
