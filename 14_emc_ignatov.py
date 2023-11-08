@@ -4,7 +4,7 @@ import random
 from scipy.constants import e, hbar, m_e
 
 # constants
-delta_t = 1e-14
+delta_t = 2e-14
 F = 1e5
 m_star = 0.1 * m_e
 sim_time = 5e-11  # simulation time

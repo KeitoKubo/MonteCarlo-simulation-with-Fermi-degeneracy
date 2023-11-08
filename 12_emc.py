@@ -4,12 +4,12 @@ import random
 from scipy.constants import e, hbar, m_e
 
 # constants
-tau_e = 1e-12
-tau_i = 5e-12
+tau_e = np.inf
+tau_i = 1e-12
 we = 1 / tau_e
 wi = 1 / tau_i
 w0 = we + wi
-tau_0 = 1 / we
+tau_0 = 1 / w0
 delta_t = 1e-14
 F = np.array([1e5, 0e5])
 m_star = 0.1 * m_e

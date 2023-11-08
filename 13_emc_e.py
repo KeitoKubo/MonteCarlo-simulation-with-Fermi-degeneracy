@@ -4,13 +4,13 @@ import random
 from scipy.constants import e, hbar, m_e
 
 # constants
-tau_e = 1e-12
-tau_i = 5e-12
+tau_e = np.inf
+tau_i = 1e-12
 we = 1 / tau_e
 wi = 1 / tau_i
 w0 = we + wi
-tau_0 = 1 / we
-delta_t = 1e-14
+tau_0 = 1 / w0
+delta_t = 3e-14
 F = np.array([1e5, 0e5])
 m_star = 0.1 * m_e
 sim_time = 5e-11  # simulation time
@@ -47,7 +47,8 @@ V0 = 1e-3    # unit of energy
 
 ax.plot(time / T0, E / V0, c='k')
 
-v_asym = e * tau_0**2 * F**2 / (2*m_star)
+v_asym = e * tau_0 / m_star * F
+E_asym = tau_i * F * v_asym
 ax.axhline(v_asym[0] / V0, c='k', ls='dotted')
 ax.axhline(v_asym[1] / V0, c='b', ls='dotted')
 

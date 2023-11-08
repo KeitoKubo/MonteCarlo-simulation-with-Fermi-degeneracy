@@ -4,13 +4,13 @@ import random
 from scipy.constants import e, hbar, m_e
 
 # constants
-tau_e = 1e-12
-tau_i = 5e-12
+tau_e = np.inf
+tau_i = 1e-12
 we = 1 / tau_e
 wi = 1 / tau_i
 w0 = we + wi
 tau_0 = 1 / w0
-delta_t = 1e-14
+delta_t = 2e-14
 F = 1e5
 m_star = 0.1 * m_e
 sim_time = 5e-11  # simulation time
@@ -49,12 +49,17 @@ plt.style.use("scientific")
 fig, ax = plt.subplots()
 
 T0 = 1e-12  # unit of time
-V0 = 1e-3    # unit of drift velocity
+E0 = 1e-3    # unit of energy
 
-ax.plot(time / T0, E / V0, c='k')
+ax.plot(time / T0, E / E0, c='k')
 
-v_asym = e * tau_0**2 * F**2 / (2*m_star)
-ax.axhline(v_asym / V0, c='k', ls='dotted')
+'''
+v_asym = e * tau_0 / m_star * F
+E_asym = tau_i * F * v_asym # remember unit trans : J - eV
+print(E_asym)
+ax.axhline(E_asym / E0, c='k', ls='dotted')
+'''
+
 
 ax.set_xlabel(r"Time (ps)")
 ax.set_ylabel(r"Mean Energy (meV)")
