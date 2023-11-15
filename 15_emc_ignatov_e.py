@@ -4,8 +4,8 @@ import random
 from scipy.constants import e, hbar, m_e
 
 # constants
-tau_e = np.inf
-tau_i = 1e-12
+tau_e = 1e-12
+tau_i = 5e-12
 we = 1 / tau_e
 wi = 1 / tau_i
 w0 = we + wi
