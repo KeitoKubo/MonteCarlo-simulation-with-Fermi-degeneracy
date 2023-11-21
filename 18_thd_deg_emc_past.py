@@ -4,29 +4,26 @@ import random
 import math
 from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
-from scipy.integrate import quad
+import scipy.integrate as spi
 
 m_star = 0.1 * m_e
-T = 300
-E_F_eV = 0.1
+T = 4.2
+E_F_eV = 0.05
 E_F = E_F_eV * e # Fermi energy
 # Electron density corresponding to Fermi energy
-dos2d = m_star * k_b * T / (math.pi * (hbar**2))
-n_E_F = dos2d * k_b * T * math.log(1 + math.exp(E_F / (k_b * T)))
-# n_E_F = int(n_E_F)
+n_E_F = m_star * k_b * T / (math.pi * (hbar**2)) * math.log(1 + math.exp(E_F/(k_b*T)))
+n_E_F = int(n_E_F)
 
 # Abstention method paramaters
 df_upper = m_star / (math.pi * (hbar**2))
 E_upper = 3*k_b*T*math.log(10) + E_F + k_b*T*math.log(1+math.exp(-1*E_F/(k_b*T)))
 
 #calculate total and mean energy by integration
-def f(E_eV):
-    v = E_eV / (1 + np.exp((E_eV - E_F_eV) / (k_b * T / e)))
-    return e * v / (n_E_F / dos2d)
-
-E_max = np.amax([E_F, 0]) + 20 * k_b * T
-mean_E_eV, err = quad(f, 0, E_max / e)
-mean_E = mean_E_eV * e
+y = lambda x: x  * 1 / (1 + np.exp((x - E_F)/(k_b * T)))
+total_E, total_E_err = spi.quad(y, 0, E_upper)
+z = lambda x: 1 / (1 + np.exp((x - E_F)/(k_b * T)))
+total_n, total_n_err = spi.quad(z, 0, E_upper)
+mean_E = total_E / total_n
 
 def rand():
     return np.random.rand()
@@ -147,6 +144,7 @@ ax.axhline(v_asym[1] / V0, c='b', ls='dotted')
 ax.set_xlabel(r"Time (ps)")
 ax.set_ylabel(r"Drift Velocity ($10^5$ m/s)")
 ax.text(30,0.5,"$E_F$ = {} eV".format(E_F_eV))
+ax.text(30,0.3,"$T$ = {} K".format(T))
 
 ax = fig.add_subplot(1, 2, 2)
 
