@@ -10,7 +10,7 @@ from scipy.constants import k as k_b
 from scipy.integrate import quad
 
 m_star = 0.1 * m_e
-T = 4.2
+T = 300
 E_F_eV = 0.1
 E_F = E_F_eV * e # Fermi energy
 # Electron density corresponding to Fermi energy
@@ -87,7 +87,7 @@ k_max_b = int(k_max_str[0]) + 1
 k_max = k_max_b * (10**(len(k_max_str) - 1))
 k_max = float(k_max)
 
-partition = int(39) # this must be odd number
+partition = int(159) # this must be odd number
 
 k_space_particles = np.zeros((partition, partition))
 k_delta = k_max / (partition - 1)

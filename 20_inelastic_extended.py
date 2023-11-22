@@ -49,6 +49,14 @@ def thd():
 def Etok(E_val):
     return math.sqrt(2*m_star*E_val) / hbar
 
+def Etok_vector(E_val):
+    k_val = math.sqrt(2*m_star*E_val) / hbar
+    r = np.random.rand()
+    theta = 2*math.pi*r
+    k_x = k_val * math.cos(theta)
+    k_y = k_val * math.sin(theta)
+    return np.array([k_x, k_y])
+
 Esaki = False  # Esaki or Ignatov
 F = np.array([1e5, 0e5])  # electric field
 e_num = 10000  # number of electrons
@@ -88,21 +96,30 @@ for i in range(len(k_sca)):
 k = np.array(k)
 k = k.T
 
-# EMC
-def inelastic(index):
-    E_val = thd()
-    k_val = math.sqrt(2*m_star*E_val) / hbar
-    r = np.random.rand()
-    theta = 2*math.pi*r
-    k_x = k_val * math.cos(theta)
-    k_y = k_val * math.sin(theta)
-    k[:,index] = [k_x,k_y]
+
+### EMC
 
 cur_time = 0  # current time
 time = []
 v_drift = []
 Ei = np.zeros(e_num)
 E = []
+
+# inelastic scattering considering phonon absorption and emission
+E_phonon = 0.06 * e #60meV
+n_phonon = 1.0 / (math.exp(E_phonon / (k_b * T)) - 1.0)
+thr_phonon = n_phonon / (1.0 + 2.0 * n_phonon)
+
+def inelastic(index):
+    E_val = energy(k[:,index])
+    if rand() < thr_phonon: # absorption
+        E_val += E_phonon
+    else: #emission
+        if E_val > E_phonon:
+            E_val -= E_phonon
+    k[:,index] = Etok_vector(E_val)
+
+# main stream
 while cur_time < sim_time:
     cur_time += delta_t
     time.append(cur_time)
@@ -112,10 +129,11 @@ while cur_time < sim_time:
         k[:, i] += e * F[:] / hbar * delta_t
         # scattering
         if rand() < (delta_t / tau_0):
+            # elastic
             if rand() < (we / w0):
-                # elastic
                 if rand() > 0.5:
                     k[:, i] = -k[:, i]
+            # inelastic
             else:
                 inelastic(i)
         Ei[i] = energy(k[:, i])
@@ -126,7 +144,8 @@ time = np.array(time)
 v_drift = np.array(v_drift)
 E = np.array(E)
 
-# Plotting
+
+### Plotting
 
 T0 = 1e-12  # unit of time
 V0 = 1e5    # unit of drift velocity
