@@ -115,17 +115,22 @@ k_x_val = -1 * (partition - 1) * k_delta
 k_y_val = -1 * (partition - 1) * k_delta
 
 for i in range(partition):
-    for j in range(partition):
-        k_x.append(k_x_val)
-        k_y.append(k_y_val)
-        k_x_val += 2 * k_delta
+    k_x.append(k_x_val)
+    k_y.append(k_y_val)
+    k_x_val += 2 * k_delta
     k_y_val += 2 * k_delta
-    k_x_val = -1 * (partition - 1) * k_delta
 k_x = np.array(k_x)
 k_y = np.array(k_y)
 
+k_begin = -1 * (partition - 1) * k_delta
+k_end = (1 * (partition - 1) + 1) * k_delta
+X,Y = np.mgrid[k_begin:k_end:2*k_delta, k_begin:k_end:2*k_delta]
+X *= k_delta
+Y *= k_delta
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(k_x, k_y, k_space_particles_seq)
+ax.plot_surface(X, Y, k_space_particles, cmap="autumn_r", lw=0.5, rstride=1, cstride=1)
+#ax.contour(k_x, k_y, k_space_particles, 10, lw=3, cmap="autumn_r", linestyles="solid", offset=-1)
+#ax.contour(k_x, k_y, k_space_particles, 10, lw=3, colors="k", linestyles="solid")
 
 plt.show()
