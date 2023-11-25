@@ -8,7 +8,7 @@ from scipy.constants import k as k_b
 from scipy.integrate import quad
 
 T = 300
-E_F = 65 #meV
+E_F = 100 #meV
 
 def b(E_val_eV):
     return math.exp((E_F - E_val_eV) * (0.001) / (k_b * T / e))
@@ -18,10 +18,15 @@ def f(E_val_eV):
 
 x = np.linspace(0,150,num=100,dtype='float64')
 y = []
+z = []
 for i in range(len(x)):
     y.append(f(x[i]))
+    z.append(b(x[i]))
 y = np.array(y)
+z = np.array(z)
 
-plt.fill_between( x, y, color="lightblue", alpha=0.5)
 plt.plot(x,y,color="red",label="Fermi-Dirac")
+plt.plot(x,z,color="blue",label="Boltzmann")
+plt.xlabel("Energy (meV)")
+plt.legend(bbox_to_anchor = (0.7 ,0.4))
 plt.show()
