@@ -1,160 +1,170 @@
-import numpy as np
 import joblib
+import numpy as np
 import matplotlib.pyplot as plt
-import random
-import math
-import time
+from numpy.random import rand
 from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
 
-E_F_arr = [1e-3,1e-2,1e-1]
 
-plt.ion()
+E_F_arr = [10e-3, 20e-3, 30e-3]
 
-plt.style.use("scientific")
-fig, ax = plt.subplots()
-line1, = ax.plot(x, y)
+def EMC(i):
+    m_star = 0.1 * m_e  # effective mass (kg)
+    T = 300  # temperature (K)
+    kT = k_b * T / e  # thermal energy (eV)
+    E_F = E_F_arr[i]  # Fermi level (eV)
 
-for i in range(len(E_F_arr)):
-    
-    m_star = 0.1 * m_e
-    T = 300
-    E_F_eV = E_F_arr[i]
-    E_F = E_F_eV * e # Fermi energy
-    # Electron density corresponding to Fermi energy
-    dos2d = m_star / (math.pi * (hbar**2))
-    n_E_F = dos2d * k_b * T * math.log(1 + math.exp(E_F / (k_b * T)))
-    # n_E_F = int(n_E_F)
+    F_x = 1e5  # electric field along x (V/m)
+    num_e = 10000  # number of electrons
 
-    # Abstention method paramaters
-    df_upper = m_star / (math.pi * (hbar**2))
-    E_upper = 3*k_b*T*math.log(10) + E_F + k_b*T*math.log(1+math.exp(-1*E_F/(k_b*T)))
+    E_pho = 60e-3  # phonon energy (eV)
+    N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
 
-    #calculate total and mean energy by integration
-    def f(E_eV):
-        v = E_eV / (1 + np.exp((E_eV - E_F_eV) / (k_b * T / e)))
-        return e * v / (n_E_F / dos2d)
+    tau_e = 1e-12  # elastic scattering time (s)
+    tau_p = 1e-12  # phonon scattering time for T = 0 (s)
 
-    E_max = np.amax([E_F, 0]) + 20 * k_b * T
-    mean_E_eV, err = quad(f, 0, E_max / e)
-    mean_E = mean_E_eV * e
+    sim_time = 1e-12  # simulation time (s)
+    delta_t = 4e-15  # time step (s)
 
-    def rand():
-        return np.random.rand()
+    dos2d = m_star / (np.pi * hbar**2) * e  # density of states (/m2 eV)
+    N_e = dos2d * kT * np.log(1 + np.exp(E_F / kT))  # electron density (/m2)
 
-    def energy(k_val):
-        return hbar**2 * (k_val[0]**2 + k_val[1]**2) / (2 * m_star * e)
+    W_ela = 1 / tau_e  # elastic scattering rate (/s)
+    W_emi = (1 + N_pho) / tau_p  # phonon emission rate (/s)
+    W_abs = N_pho / tau_p  # phonon absorption rate (/s)
+    W_total = W_ela + W_emi + W_abs  # total scattering rate (/s)
 
-    # Using FD distribution
-    def df(E_val):
-        return df_upper/ (1.0 + math.exp((E_val - E_F)/(k_b * T)))
+    E_max = np.amax([E_F, 0]) + 20 * kT  # cut-off energy (eV)
 
-    def thd():
+
+    def krandom(ksquared):
+        k_abs = np.sqrt(ksquared)
+        theta = 2 * np.pi * rand()
+        k_x = k_abs * np.cos(theta)
+        k_y = k_abs * np.sin(theta)
+        return np.array([k_x, k_y])
+
+
+    def ktoE(k):
+        return hbar**2 * (k[0]**2 + k[1]**2) / (2 * m_star * e)
+
+
+    def Etok(E):
+        ksquared = 2 * m_star * E * e / hbar**2
+        return krandom(ksquared)
+
+
+    # randomly generate a thermal equilibrium energy
+    def ene_thd():
         while True:
-            E_val = rand() * E_upper
-            df_val = rand() * df_upper
-            df_true = df(E_val)
+            E_val = rand() * E_max
+            df_val = rand()
+            df_true = 1 / (1 + np.exp((E_val - E_F) / kT))
             if df_val < df_true:
                 return E_val
 
-    def Etok(E_val):
-        return math.sqrt(2*m_star*E_val) / hbar
 
-    Esaki = False  # Esaki or Ignatov
-    F = np.array([1e5, 0e5])  # electric field
-    e_num = 10000  # number of electrons
-    sim_time = 5e-11  # simulation time
-    delta_t = 4e-14  # time step
+    # calculate the mean energy
+    def f(E):
+        v = E / (1 + np.exp((E - E_F) / kT))
+        return v / (N_e / dos2d)
+    E_mean, err = quad(f, 0, E_max)
 
-    if Esaki:
-        tau_e = np.inf
-        tau_i = 1e-12
-    else:
-        tau_e = 1e-12
-        tau_i = 5e-12
 
-    we = 1 / tau_e
-    wi = 1 / tau_i
-    w0 = we + wi
-    tau_0 = 1 / w0
-
-    #energy of electrons in thermal equilibrium distribution
-    E_ini = [] 
-    for i in range(e_num):
-        E_ini.append(thd())
-
-    #calculate wave numbers from energy
-    k_sca = []
-    for i in range(len(E_ini)):
-        k_sca.append(Etok(E_ini[i]))
-
-    #calculate wave-number vectors from k_sca
-    k = []
-    for i in range(len(k_sca)):
-        r = np.random.rand()
-        theta = 2*math.pi*r
-        k_x = k_sca[i] * math.cos(theta)
-        k_y = k_sca[i] * math.sin(theta)
-        k.append(np.array([k_x, k_y]))
-    k = np.array(k)
+    # generate the initial thermal distribution
+    k_ini = []
+    for i in range(num_e):
+        k_ini.append(Etok(ene_thd()))
+    k = np.array(k_ini)
     k = k.T
 
-    # EMC
-    def inelastic(index):
-        E_val = thd()
-        k_val = math.sqrt(2*m_star*E_val) / hbar
-        r = np.random.rand()
-        theta = 2*math.pi*r
-        k_x = k_val * math.cos(theta)
-        k_y = k_val * math.sin(theta)
-        k[:,index] = [k_x,k_y]
+
+    ### EMC
+
+    print(f'E_F = {E_F * 1e3} meV')
+    print(f'N_e = {N_e / 1e4:.2e} /cm2')
+    print(f'tau_ela = {1e12 / W_ela:.2f} ps')
+    print(f'tau_emi = {1e12 / W_emi:.2f} ps')
+    print(f'tau_abs = {1e12 / W_abs:.2f} ps')
 
     cur_time = 0  # current time
     time = []
     v_drift = []
-    Ei = np.zeros(e_num)
-    E = []
+    energy = []
+    Ei = np.zeros(num_e)
+
+    # main stream
     while cur_time < sim_time:
         cur_time += delta_t
         time.append(cur_time)
-        Esum = np.array([0.0,0.0])
-        for i in range(e_num):
+        for i in range(num_e):
             # free flight
-            k[:, i] += e * F[:] / hbar * delta_t
+            k[0, i] += e * F_x / hbar * delta_t
             # scattering
-            if rand() < (delta_t / tau_0):
-                if rand() < (we / w0):
-                    # elastic
-                    if rand() > 0.5:
-                        k[:, i] = -k[:, i]
+            if rand() < W_total * delta_t:
+                r = rand()
+                if r < W_ela / W_total:
+                    # elastic scattering
+                    k[:, i] = krandom(k[0, i]**2 + k[1, i]**2)
+                elif r < (W_ela + W_emi) / W_total:
+                    # phonon emission
+                    E = ktoE(k[:, i])
+                    if (E > E_pho):
+                        E -= E_pho
+                        k[:, i] = Etok(E)
                 else:
-                    inelastic(i)
-            Ei[i] = energy(k[:, i])
+                    # phonon absorption
+                    E = ktoE(k[:, i])
+                    E += E_pho
+                    k[:, i] = Etok(E)
+            Ei[i] = ktoE(k[:, i])
         vd = hbar * np.mean(k, axis=1) / m_star
         v_drift.append(vd)
-        E.append(np.mean(Ei))
+        energy.append(np.mean(Ei))
     time = np.array(time)
     v_drift = np.array(v_drift)
-    E = np.array(E)
+    energy = np.array(energy)
 
-    # Plotting
+
+    ### Plotting
 
     T0 = 1e-12  # unit of time
     V0 = 1e5    # unit of drift velocity
     E0 = 1e-3   # unit of energy
-    
-  
+
+    fig = plt.figure(figsize=(12, 6))
+
+    ax = fig.add_subplot(1, 2, 1)
+
+    ax.set_xlim(0, sim_time / T0)
     ax.plot(time / T0, v_drift[:, 0] / V0, c='k')
     ax.plot(time / T0, v_drift[:, 1] / V0, c='b')
 
-    v_asym = e * tau_0 / m_star * F
-    ax.axhline(v_asym[0] / V0, c='k', ls='dotted')
-    ax.axhline(v_asym[1] / V0, c='b', ls='dotted')
+    ax.set_xlabel(r'Time (ps)')
+    ax.set_ylabel(r'Drift Velocity ($10^5$ m/s)')
 
-    ax.set_xlabel(r"Time (ps)")
-    ax.set_ylabel(r"Drift Velocity ($10^5$ m/s)")
-    ax.text(30,0.5,"$E_F$ = {} eV".format(E_F_eV))
+    ax.text(0.45, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
+            ha='left', va='center', transform=ax.transAxes)
+    ax.text(0.45, 0.35, r'$n_{\rm e}$ = ' + f'{N_e / 1e16:.2f} ' + 
+            r'$\times 10^{12}\ {\rm cm}^{-2}$',
+            ha='left', va='center', transform=ax.transAxes)
+
+    for tau_0 in [1 / (W_ela + W_abs), 1 / (W_ela + W_abs + W_emi)]:
+        v_0 = e * tau_0 / m_star * F_x
+        ax.axhline(v_0 / V0, c='k', ls=':')
+
+    ax = fig.add_subplot(1, 2, 2)
+    ax.set_xlim(0, sim_time / T0)
+
+    ax.plot(time / T0, energy / E0, c='k')
+    ax.axhline(E_mean / E0, ls=':')
+
+    ax.set_xlabel(r'Time (ps)')
+    ax.set_ylabel(r'Mean Energy (meV)')
+
+    fig.tight_layout()
 
     plt.show()
 
+_ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(i) for i in range(len(E_F_arr)))
