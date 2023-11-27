@@ -1,5 +1,8 @@
 {
 	"python.analysis.extraPaths": [
 		"C:\\\\Users\\\\leagu\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python310\\\\lib\\\\site-packages\\\\joblib\\\\__init__.py"
-	]
+	],
+	"terminal.integrated.env.windows": {
+		"PSExecutionPolicyPreference": "RemoteSigned"
+}
 }
