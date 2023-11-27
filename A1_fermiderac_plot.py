@@ -7,6 +7,8 @@ from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
 
+plt.style.use("scientific")
+
 T = 300
 E_F = 100 #meV
 
@@ -28,5 +30,5 @@ z = np.array(z)
 plt.plot(x,y,color="red",label="Fermi-Dirac")
 plt.plot(x,z,color="blue",label="Boltzmann")
 plt.xlabel("Energy (meV)")
-plt.legend(bbox_to_anchor = (0.7 ,0.4))
+plt.legend(bbox_to_anchor = (0.5 ,0.5))
 plt.show()

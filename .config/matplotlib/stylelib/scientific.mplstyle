@@ -1,0 +1,32 @@
+axes.labelsize         : 20
+axes.linewidth         : 1.4
+axes.prop_cycle        : cycler('color', ['000000', '1e1eff', 'F30100', '009D5B', 'f58231', '911eb4', '18c6f8', 'F172A3', 'B0F010'])
+axes.labelpad          : 8
+figure.subplot.left    : 0.2
+figure.subplot.right   : 0.8
+figure.subplot.bottom  : 0.2
+figure.subplot.top     : 0.8
+figure.figsize         : 6.4, 6.4
+figure.frameon         : False
+font.family            : stix
+font.size              : 18
+lines.linewidth        : 1.4
+mathtext.fontset       : stix
+savefig.bbox           : tight
+savefig.pad_inches     : 0.1
+xtick.direction        : in
+xtick.labelsize        : 17
+xtick.major.pad        : 6
+xtick.major.size       : 8
+xtick.major.width      : 1.4
+xtick.minor.size       : 4
+xtick.minor.width      : 1.4
+xtick.top              : True
+ytick.direction        : in
+ytick.labelsize        : 17
+ytick.major.pad        : 6
+ytick.major.size       : 8
+ytick.major.width      : 1.4
+ytick.minor.size       : 4
+ytick.minor.width      : 1.4
+ytick.right            : True
