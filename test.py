@@ -7,7 +7,7 @@ from scipy.constants import k as k_b
 from scipy.integrate import quad
 
 
-E_F_arr = [10e-3, 20e-3, 30e-3]
+E_F_arr = [10e-3]
 
 def EMC(i):
     m_star = 0.1 * m_e  # effective mass (kg)
@@ -24,8 +24,8 @@ def EMC(i):
     tau_e = 1e-12  # elastic scattering time (s)
     tau_p = 1e-12  # phonon scattering time for T = 0 (s)
 
-    sim_time = 1e-12  # simulation time (s)
-    delta_t = 4e-15  # time step (s)
+    sim_time = 4e-12  # simulation time (s)
+    delta_t = 2e-15  # time step (s)
 
     dos2d = m_star / (np.pi * hbar**2) * e  # density of states (/m2 eV)
     N_e = dos2d * kT * np.log(1 + np.exp(E_F / kT))  # electron density (/m2)
