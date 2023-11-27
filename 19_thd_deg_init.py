@@ -18,7 +18,7 @@ def thd_init(i):
     E_F_eV = E_F_arr[i]
     E_F = E_F_eV * e # Fermi energy
     # Electron density corresponding to Fermi energy
-    dos2d = m_star * k_b * T / (math.pi * (hbar**2))
+    dos2d = m_star  / (math.pi * (hbar**2))
     n_E_F = dos2d * k_b * T * math.log(1 + math.exp(E_F / (k_b * T)))
 
     # Abstention method paramaters
@@ -81,7 +81,6 @@ def thd_init(i):
     #initial k-space condition
 
     k_max = -0.1
-    k_min = 0.1
     for i in range(len(k[0])):
         k_max = max(k_max,max(abs(k[0][i]),abs(k[1][i])))
     #round and get k_max value
@@ -90,6 +89,7 @@ def thd_init(i):
     k_max_b = int(k_max_str[0]) + 1
     k_max = k_max_b * (10**(len(k_max_str) - 1))
     k_max = float(k_max)
+    print(k_max)
 
     partition = int(159) # this must be odd number
 
