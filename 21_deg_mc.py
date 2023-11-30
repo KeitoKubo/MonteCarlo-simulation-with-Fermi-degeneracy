@@ -95,3 +95,10 @@ k_biased = np.copy(k_arr)
 for i in range(len(k_biased[0])):
 	k_biased[0][i] += partition * k_delta
 	k_biased[1][i] += partition * k_delta
+
+for i in range(len(k_biased[0])):
+	k_x = k_biased[0][i]
+	k_y = k_biased[1][i]
+	x_index = int(k_x / (2.0 * k_delta))
+	y_index = int(k_y / (2.0 * k_delta))
+	k_space_particles[y_index][x_index] += 1
