@@ -10,13 +10,14 @@ from scipy.integrate import quad
 m_star = 0.1 * m_e  # effective mass (kg)
 T = 300  # temperature (K)
 kT = k_b * T / e  # thermal energy (eV)
-E_F = E_F_arr[i]  # Fermi level (eV)
+E_F = 30e-3  # Fermi level (eV)
 
 F_x = 1e5  # electric field along x (V/m)
 num_e = 10000  # number of electrons
 
 E_pho = 60e-3  # phonon energy (eV)
 N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
+g_s = 2 # spin factor
 
 tau_e = 1e-12  # elastic scattering time (s)
 tau_p = 1e-12  # phonon scattering time for T = 0 (s)
@@ -78,8 +79,8 @@ k_arr = np.array(k_ini)
 k_arr = k_arr.T
 
 k_max = -0.1
-for i in range(len(k[0])):
-	k_max = max(k_max,max(abs(k[0][i]),abs(k[1][i])))
+for i in range(len(k_arr[0])):
+	k_max = max(k_max,max(abs(k_arr[0][i]),abs(k_arr[1][i])))
 #round and get k_max value
 k_max = int(k_max)
 k_max_str = str(k_max)
