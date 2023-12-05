@@ -23,6 +23,9 @@ g_s = 2 # spin factor
 tau_e = 1e-12  # elastic scattering time (s)
 tau_p = 1e-12  # phonon scattering time for T = 0 (s)
 
+sim_time = 50e-12  # simulation time (s)
+delta_t = 4e-15  # time step (s)
+
 dos2d = m_star / (np.pi * hbar**2) * e  # density of states (/m2 eV)
 N_e = dos2d * kT * np.log(1 + np.exp(E_F / kT))  # electron density (/m2)
 
@@ -33,6 +36,7 @@ W_total = W_ela + W_emi + W_abs  # total scattering rate (/s)
 
 E_max = np.amax([E_F, 0]) + 20 * kT  # cut-off energy (eV)
 
+
 def krandom(ksquared):
 	k_abs = np.sqrt(ksquared)
 	theta = 2 * np.pi * rand()
@@ -40,14 +44,18 @@ def krandom(ksquared):
 	k_y = k_abs * np.sin(theta)
 	return np.array([k_x, k_y])
 
+
 def ktoE(k):
 	return hbar**2 * (k[0]**2 + k[1]**2) / (2 * m_star * e)
+
 
 def Etok(E):
 	ksquared = 2 * m_star * E * e / hbar**2
 	return krandom(ksquared)
 
-def ene_thd(): # randomly generate a thermal equilibrium energy
+
+# randomly generate a thermal equilibrium energy
+def ene_thd():
 	while True:
 		E_val = rand() * E_max
 		df_val = rand()
@@ -55,11 +63,12 @@ def ene_thd(): # randomly generate a thermal equilibrium energy
 		if df_val < df_true:
 			return E_val
 
-def f(E): # calculate the mean energy
+
+# calculate the mean energy
+def f(E):
 	v = E / (1 + np.exp((E - E_F) / kT))
 	return v / (N_e / dos2d)
 E_mean, err = quad(f, 0, E_max)
-
 
 
 ### generate the initial thermal distribution
@@ -92,42 +101,12 @@ for i in range(len(k_arr[0])):
 	f_k[y_index][x_index] += alpha
 
 
+k_begin = -1 * (partition - 1) * k_delta
+k_end = (1 * (partition - 1) + 1) * k_delta
+X,Y = np.mgrid[k_begin:k_end:2*k_delta, k_begin:k_end:2*k_delta]
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(X, Y, f_k, cmap="autumn_r", lw=0.5, rstride=1, cstride=1)
+ax.text2D(0.8, 0.9, "$E_F = {}$ meV".format(str(E_F * 1e3)), transform=ax.transAxes)
 
-### EMC
-
-sim_time = 50e-12  # simulation time (s)
-delta_t = 4e-15  # time step (s)
-cur_time = 0  # current time
-time_arr = []
-while cur_time < sim_time:
-	cur_time += delta_t
-	time_arr.append(cur_time)
-	for i in range(num_e):
-		k_x = k_arr[0][i] + partition * k_delta
-		k_y = k_arr[1][i] + partition * k_delta
-		x_index = int(k_x / (2.0 * k_delta))
-		y_index = int(k_y / (2.0 * k_delta))
-		k_new = k_arr[i] # k-vector after considering scattering
-		k_new[0] += e * F_x / hbar * delta_t # free flight
-		if rand() < W_total * delta_t: # scattering
-			r = rand()
-			if r < W_ela / W_total: # elastic
-				k_new = krandom(k_new[0]**2 + k_new[1]**2)
-			elif r < (W_ela + W_emi) / W_total: # phonon scattering
-				E_new = ktoE(k_new)
-				if (E_new > E_pho):
-					E_new -= E_pho
-					k_new = Etok(E_new)
-			else: # phonon absorption
-				E_new = ktoE(k_new)
-				E_new += E_pho
-				k_new = Etok(E_new)
-			k_x_new = k_new[0] + partition * k_delta
-			k_y_new = k_new[1] + partition * k_delta
-			x_index_new = int(k_x_new / (2.0 * k_delta))
-			y_index_new = int(k_y_new / (2.0 * k_delta))
-			r2 = rand()
-			if r2 > f_k[y_index_new][x_index_new]: # the k-space cell to move is not occupied 
-				f_k[y_index][x_index] -= alpha
-				k_arr[i] = k_new
-				f_k[y_index_new][x_index_new] += alpha
+plt.show()

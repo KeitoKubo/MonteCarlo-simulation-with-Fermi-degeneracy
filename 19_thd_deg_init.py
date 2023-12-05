@@ -112,7 +112,7 @@ def thd_init(i):
         for j in range(partition):
             k_space_particles_seq.append(k_space_particles[i][j])
     k_space_particles_seq = np.array(k_space_particles_seq)
-
+    
     k_x = []
     k_y = []
     k_x_val = -1 * (partition - 1) * k_delta
