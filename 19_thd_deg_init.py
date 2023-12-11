@@ -10,11 +10,11 @@ from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
 
-E_F_arr = [100e-3, 50e-3, 10e-3, 0, -10e-3, -50e-3, -100e-3]
+E_F_arr = [50e-3]
 
 def thd_init(i):
     m_star = 0.1 * m_e
-    T = 300
+    T = 10
     E_F_eV = E_F_arr[i]
     E_F = E_F_eV * e # Fermi energy
     # Electron density corresponding to Fermi energy
