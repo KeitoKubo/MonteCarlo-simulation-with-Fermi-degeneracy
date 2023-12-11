@@ -9,17 +9,19 @@ from scipy.constants import k as k_b
 from scipy.integrate import quad
 
 E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
+k_max_arr = [3e8, 3e8, 4e8, 4e8]
 
-def EMC(i):
+def EMC(index):
 	m_star = 0.1 * m_e  # effective mass (kg)
-	T = 300  # temperature (K)
+	T = 10  # temperature (K)
 	kT = k_b * T / e  # thermal energy (eV)
-	E_F = E_F_arr[i]  # Fermi level (eV)
+	E_F = E_F_arr[index]  # Fermi level (eV)
 
 	F = np.array([1e5,0])
 	F_x = F[0]  # electric field along x (V/m)
-	num_e = int(1e5)  # number of electrons
-	partition = int(19) # this must be odd number
+	num_e = int(2e5)  # number of electrons
+	partition = int(13) # this must be odd number
+	k_max = int(k_max_arr[index])
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -29,7 +31,6 @@ def EMC(i):
 	tau_p = 1e-12  # phonon scattering time for T = 0 (s)
 
 	dos2d = m_star / (np.pi * hbar**2) * e  # density of states (/m2 eV)
-	N_e = dos2d * kT * np.log(1 + np.exp(E_F / kT))  # electron density (/m2)
 
 	W_ela = 1 / tau_e  # elastic scattering rate (/s)
 	W_emi = (1 + N_pho) / tau_p  # phonon emission rate (/s)
@@ -37,6 +38,10 @@ def EMC(i):
 	W_total = W_ela + W_emi + W_abs  # total scattering rate (/s)
 
 	E_max = np.amax([E_F, 0]) + 20 * kT  # cut-off energy (eV)
+	N_e = dos2d * (E_max - kT * np.log((1+np.exp((E_max-E_F)/kT)) / (1+np.exp((-E_F)/kT))))
+	f_k = np.zeros((partition, partition)) # f(k) should be updated periodically
+	k_delta = k_max / (partition - 1)
+	alpha = (2*np.pi)**2 * N_e / (g_s * num_e * (2 * k_max/partition)**2)
 
 	def krandom(ksquared):
 		k_abs = np.sqrt(ksquared)
@@ -58,35 +63,16 @@ def EMC(i):
 			df_val = rand()
 			df_true = 1 / (1 + np.exp((E_val - E_F) / kT))
 			if df_val < df_true:
-				return E_val
+				k_val = Etok(E_val)
+				x_index, y_index = Get_fk_index(k_val)
+				if rand() < 1 - f_k[y_index][x_index]:
+					f_k[y_index][x_index] += alpha
+					return k_val
 
 	def f(E): # calculate the mean energy
 		v = E / (1 + np.exp((E - E_F) / kT))
 		return v / (N_e / dos2d)
 	E_mean, err = quad(f, 0, E_max)
-
-
-
-	### generate the initial thermal distribution
-
-	k_ini = []
-	for i in range(num_e):
-		k_ini.append(Etok(ene_thd()))
-	k_arr = np.array(k_ini)
-	k_arr = k_arr.T # k_arr : k_x, k_y values of each electrons
-
-	k_max = -0.1
-	for i in range(len(k_arr[0])):
-		k_max = max(k_max,max(abs(k_arr[0][i]),abs(k_arr[1][i])))
-	#round and get k_max value
-	k_max = int(k_max)
-	k_max_str = str(k_max)
-	k_max_b = int(k_max_str[0]) + 1
-	k_max = k_max_b * (10**(len(k_max_str) - 1))
-	k_max = float(k_max)
-
-	f_k = np.zeros((partition, partition)) # f(k) should be updated periodically
-	k_delta = k_max / (partition - 1)
 
 	def Get_fk_index(k):
 		k_x = k[0] + partition * k_delta
@@ -94,15 +80,14 @@ def EMC(i):
 		x_index = int(k_x / (2.0 * k_delta))
 		y_index = int(k_y / (2.0 * k_delta))
 		return x_index, y_index
+	
+	### generate the initial thermal distribution
 
-
-	alpha = (2*np.pi)**2 * N_e / (g_s * num_e * (2 * k_max/partition)**2)
-	for i in range(len(k_arr[0])):
-		x_index, y_index = Get_fk_index(k_arr[:, i])
-		f_k[y_index][x_index] += alpha
-
-
-
+	k_ini = []
+	for i in range(num_e):
+		k_ini.append(ene_thd())
+	k_arr = np.array(k_ini)
+	k_arr = k_arr.T # k_arr : k_x, k_y values of each electrons
 
 	### EMC
 
@@ -140,11 +125,11 @@ def EMC(i):
 			# check if k could be updated
 			x_index_new, y_index_new = Get_fk_index(k_new)
 			if x_index_new >= 0 and x_index_new < partition and y_index_new >= 0 and y_index_new < partition:
-				if rand() < (1 - f_k[x_index_new][y_index_new]):
+				if rand() < (1 - f_k[y_index_new][x_index_new]):
 					# updated k
 					x_index, y_index = Get_fk_index(k_arr[:, i])
-					f_k[x_index][y_index] -= alpha
-					f_k[x_index_new][y_index_new] += alpha
+					f_k[y_index][x_index] -= alpha
+					f_k[y_index_new][x_index_new] += alpha
 					k_arr[:,i] = k_new
 					Ei_arr[i] = ktoE(k_arr[:, i])
 		vd_val = vd = hbar * np.mean(k_arr, axis=1) / m_star
@@ -196,4 +181,7 @@ def EMC(i):
 
 	plt.show()
 
+begin_time = tm.time()
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(i) for i in range(len(E_F_arr)))
+end_time = tm.time()
+print(end_time - begin_time)
