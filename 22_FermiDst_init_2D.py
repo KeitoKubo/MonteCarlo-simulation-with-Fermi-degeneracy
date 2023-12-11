@@ -1,4 +1,3 @@
-### EMC which considers Fermi degeneracy
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,22 +10,18 @@ E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def func(i):
     m_star = 0.1 * m_e  # effective mass (kg)
-    T = 300  # temperature (K)
+    T = 10  # temperature (K)
     kT = k_b * T / e  # thermal energy (eV)
     E_F = E_F_arr[i] # Fermi level (eV)
 
-    F_x = 1e5  # electric field along x (V/m)
-    num_e = int(1e5)  # number of electrons
-    partition = int(19) # this must be odd number
-
-    E_pho = 60e-3  # phonon energy (eV)
-    N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
+    num_e = int(4e5)  # number of electrons
+    partition = int(15) # this must be odd number
     g_s = 2 # spin factor
 
     dos2d = m_star / (np.pi * hbar**2) * e  # density of states (/m2 eV)
-    N_e = dos2d * kT * np.log(1 + np.exp(E_F / kT))  # electron density (/m2)
+    '''N_e = dos2d * kT * np.log(1 + np.exp(E_F / kT))  # electron density (/m2)'''
     E_max = np.amax([E_F, 0]) + 20 * kT  # cut-off energy (eV)
-
+    N_e = dos2d * (E_max - kT * np.log((1+np.exp((E_max-E_F)/kT)) / (1+np.exp((-E_F)/kT))))
 
     def krandom(ksquared):
         k_abs = np.sqrt(ksquared)
@@ -35,15 +30,9 @@ def func(i):
         k_y = k_abs * np.sin(theta)
         return np.array([k_x, k_y])
 
-
-    def ktoE(k):
-        return hbar**2 * (k[0]**2 + k[1]**2) / (2 * m_star * e)
-
-
     def Etok(E):
         ksquared = 2 * m_star * E * e / hbar**2
         return krandom(ksquared)
-
 
     # randomly generate a thermal equilibrium energy
     def ene_thd():
@@ -54,16 +43,8 @@ def func(i):
             if df_val < df_true:
                 return E_val
 
-
-    # calculate the mean energy
-    def f(E):
-        v = E / (1 + np.exp((E - E_F) / kT))
-        return v / (N_e / dos2d)
-    E_mean, err = quad(f, 0, E_max)
-
     def FD(E):
         return 1 / (1 + np.exp((E - E_F) / kT))
-
 
     ### generate the initial thermal distribution
 
@@ -94,43 +75,8 @@ def func(i):
         y_index = int(k_y / (2.0 * k_delta))
         f_k[y_index][x_index] += alpha
 
-
     # generate f(E) from f_k
 
-    '''
-    E_arr = []
-    f_arr = []
-    fermi_arr = []
-
-    for y_index in range(int((partition-1)/2), partition, 1):
-        for x_index in range(int((partition-1)/2), partition, 1):
-            f_val = f_k[y_index][x_index]
-            f_arr.append(f_val)
-            i = y_index - (partition-1)/2
-            j = x_index - (partition-1)/2
-            E_val = hbar**2 * (2*k_delta)**2 * (i**2 + j**2) / (2 * m_star * e)
-            fermi_val = FD(E_val)
-            E_arr.append(E_val)
-            fermi_arr.append(fermi_val)
-            
-    E_arr = np.array(E_arr)
-    f_arr = np.array(f_arr)
-    fermi_arr = np.array(fermi_arr)
-
-    E0 = 1e-3   # unit of energy
-
-    plt.style.use('scientific')
-    fig, ax = plt.subplots()
-    ax.text(0.45, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
-                ha='left', va='center', transform=ax.transAxes)
-    ax.scatter(E_arr / E0, f_arr, c='k', label='generated function')
-    ax.scatter(E_arr / E0, fermi_arr, c='b', label='Fermi-Dirac function')
-    # 軸ラベル
-    ax.set_xlabel(r"Energy")
-
-    plt.legend()
-    plt.show()
-    '''
     f_E_arr = []
     FD_E_arr = []
 

@@ -16,7 +16,7 @@ def EMC(i):
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[i]  # Fermi level (eV)
 
-	F = np.array([1e5,0])
+	F = np.array([0,0])
 	F_x = F[0]  # electric field along x (V/m)
 	num_e = int(1e5)  # number of electrons
 	partition = int(19) # this must be odd number
@@ -196,4 +196,7 @@ def EMC(i):
 
 	plt.show()
 
+begin_time = tm.time()
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(i) for i in range(len(E_F_arr)))
+end_time = tm.time()
+print(end_time - begin_time)
