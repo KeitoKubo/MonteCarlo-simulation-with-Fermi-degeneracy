@@ -17,7 +17,7 @@ def EMC(index):
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[index]  # Fermi level (eV)
 
-	F = np.array([1e5,0])
+	F = np.array([0,0])
 	F_x = F[0]  # electric field along x (V/m)
 	num_e = int(2e5)  # number of electrons
 	partition = int(13) # this must be odd number
