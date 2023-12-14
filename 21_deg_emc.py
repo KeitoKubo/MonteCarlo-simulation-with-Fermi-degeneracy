@@ -8,17 +8,16 @@ from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
 
-E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3,10e-3, 20e-3, 30e-3, 50e-3]
-F_arr = [1e5,1e5,1e5,1e5,1e5,0,0,0,0]
+E_F_arr = [30e-3]
+F_arr = [0]
 
 def EMC(i):
 	m_star = 0.1 * m_e  # effective mass (kg)
-	T = 4.2  # temperature (K)
+	T = 10  # temperature (K)
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[i]  # Fermi level (eV)
 
 	F = np.array([0,0])
-	F[0] = F_arr[i]
 	F_x = F[0]  # electric field along x (V/m)
 	num_e = int(2e5)  # number of electrons
 	partition = int(13) # this must be odd number
@@ -39,6 +38,9 @@ def EMC(i):
 	W_total = W_ela + W_emi + W_abs  # total scattering rate (/s)
 
 	E_max = np.amax([E_F, 0]) + 20 * kT  # cut-off energy (eV)
+
+	def FD(E):
+		return 1 / (1 + np.exp((E - E_F) / kT))
 
 	def krandom(ksquared):
 		k_abs = np.sqrt(ksquared)
@@ -77,32 +79,25 @@ def EMC(i):
 	k_arr = np.array(k_ini)
 	k_arr = k_arr.T # k_arr : k_x, k_y values of each electrons
 
-	k_max = -0.1
-	for i in range(len(k_arr[0])):
-		k_max = max(k_max,max(abs(k_arr[0][i]),abs(k_arr[1][i])))
-	#round and get k_max value
-	k_max = int(k_max)
-	k_max_str = str(k_max)
-	k_max_b = int(k_max_str[0]) + 1
-	k_max = k_max_b * (10**(len(k_max_str) - 1))
-	k_max = float(k_max)
+	k_max = np.max(np.abs(k_arr))
+	pow = np.floor(np.log10(k_max))
+	k_max = int(np.ceil(k_max / 10**pow)) * 10**pow
 
 	f_k = np.zeros((partition, partition)) # f(k) should be updated periodically
-	k_delta = k_max / (partition - 1)
+	k_delta = 2 * k_max / partition
 
 	def Get_fk_index(k):
-		k_x = k[0] + partition * k_delta
-		k_y = k[1] + partition * k_delta
-		x_index = int(k_x / (2.0 * k_delta))
-		y_index = int(k_y / (2.0 * k_delta))
+		k_x = k[0] + k_max
+		k_y = k[1] + k_max
+		x_index = int(k_x / k_delta)
+		y_index = int(k_y / k_delta)
 		return x_index, y_index
 
 
-	alpha = (2*np.pi)**2 * N_e / (g_s * num_e * (2 * k_max/partition)**2)
+	alpha = (2*np.pi)**2 * N_e / (g_s * num_e * k_delta**2)
 	for i in range(len(k_arr[0])):
 		x_index, y_index = Get_fk_index(k_arr[:, i])
 		f_k[y_index][x_index] += alpha
-
 
 
 

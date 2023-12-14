@@ -10,7 +10,7 @@ from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
 
-E_F_arr = [50e-3]
+E_F_arr = [30e-3]
 
 def thd_init(i):
     m_star = 0.1 * m_e
@@ -91,7 +91,7 @@ def thd_init(i):
     k_max = float(k_max)
     print(k_max)
 
-    partition = int(159) # this must be odd number
+    partition = int(13) # this must be odd number
 
     k_space_particles = np.zeros((partition, partition))
     k_delta = k_max / (partition - 1)

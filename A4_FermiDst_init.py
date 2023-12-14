@@ -14,7 +14,7 @@ E_F = 30e-3  # Fermi level (eV)
 
 F_x = 1e5  # electric field along x (V/m)
 num_e = int(1e5)  # number of electrons
-partition = int(19) # this must be odd number
+partition = int(13) # this must be odd number
 
 E_pho = 60e-3  # phonon energy (eV)
 N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
