@@ -10,6 +10,7 @@ from scipy.integrate import quad
 
 E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 k_max_arr = [3e8, 3e8, 4e8, 4e8]
+F_arr = [1e5, 1e5, 1e5, 1e5]
 
 def EMC(index):
 	m_star = 0.1 * m_e  # effective mass (kg)
@@ -18,6 +19,7 @@ def EMC(index):
 	E_F = E_F_arr[index]  # Fermi level (eV)
 
 	F = np.array([0,0])
+	F[0] = F_arr[index]
 	F_x = F[0]  # electric field along x (V/m)
 	num_e = int(2e5)  # number of electrons
 	partition = int(13) # this must be odd number
@@ -91,7 +93,7 @@ def EMC(index):
 
 	### EMC
 
-	sim_time = 30e-12  # simulation time (s)
+	sim_time = 50e-12  # simulation time (s)
 	delta_t = 1e-14  # time step (s)
 	cur_time = 0
 	time_arr = []

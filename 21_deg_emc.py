@@ -8,18 +8,20 @@ from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
 
-E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
+E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3,10e-3, 20e-3, 30e-3, 50e-3]
+F_arr = [1e5,1e5,1e5,1e5,1e5,0,0,0,0]
 
 def EMC(i):
 	m_star = 0.1 * m_e  # effective mass (kg)
-	T = 300  # temperature (K)
+	T = 4.2  # temperature (K)
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[i]  # Fermi level (eV)
 
 	F = np.array([0,0])
+	F[0] = F_arr[i]
 	F_x = F[0]  # electric field along x (V/m)
-	num_e = int(1e5)  # number of electrons
-	partition = int(19) # this must be odd number
+	num_e = int(2e5)  # number of electrons
+	partition = int(13) # this must be odd number
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -106,7 +108,7 @@ def EMC(i):
 
 	### EMC
 
-	sim_time = 30e-12  # simulation time (s)
+	sim_time = 50e-12  # simulation time (s)
 	delta_t = 1e-14  # time step (s)
 	cur_time = 0
 	time_arr = []
