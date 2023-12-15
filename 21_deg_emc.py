@@ -1,4 +1,7 @@
-### EMC which considers Fermi degeneracy
+'''
+This program does EMC with fermi degeneracy effect,
+and plots time lapse of drift velocity and mean energy.
+'''
 import joblib
 import time as tm
 import numpy as np
@@ -110,6 +113,10 @@ def EMC(i):
 	E_mean_arr = []
 	Ei_arr = np.zeros(num_e) # energy array of each electrons
 	time_index = 1
+	# initialize Ei_arr
+	for i in range(num_e):
+			k_i = k_arr[:,i]
+			Ei_arr[i] = ktoE(k_i)
 	# main stream
 	while cur_time < sim_time:
 		cur_time += delta_t

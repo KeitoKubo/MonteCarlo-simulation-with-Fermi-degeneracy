@@ -1,4 +1,8 @@
-### EMC which considers Fermi degeneracy
+'''
+(Windows version)
+this program generate gifs of time lapse of distribution function.
+I considered Fermi degeneracy effect.
+'''
 import joblib
 import time as tm
 import numpy as np

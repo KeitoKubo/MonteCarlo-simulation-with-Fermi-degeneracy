@@ -1,4 +1,8 @@
-### EMC which considers Fermi degeneracy
+'''
+(Linux version)
+this program generate gifs of time lapse of distribution function.
+I considered Fermi degeneracy effect.
+'''
 import joblib
 import time as tm
 import numpy as np
@@ -11,8 +15,6 @@ from scipy.integrate import quad
 from matplotlib import animation
 from matplotlib import rcParams
 
-fm = matplotlib.font_manager
-fm._get_fontconfig_fonts.cache_clear()
 E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def EMC(index):
@@ -109,10 +111,7 @@ def EMC(index):
     E0 = 1e-3   # unit of energy
 
     plt.style.use('scientific')
-    plt.rcParams['mathtext.fontset'] = 'custom'
-    plt.rcParams['mathtext.rm'] = 'STIX Two Text'
-    plt.rcParams['font.family'] = ['STIX Two Text']
-   
+  
     fig = plt.figure(figsize=(12, 6))
     ims = []
 
@@ -200,7 +199,7 @@ def EMC(index):
 
     ### Plot Animation
     plt.plot(E_arr_forF / E0, Fermi_arr, c='b')
-    fig.text(0.45, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
+    fig.text(0.45, 0.40, r'$E_{/rm F}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center')
     ani = animation.ArtistAnimation(fig, ims, interval = 50)
     ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
