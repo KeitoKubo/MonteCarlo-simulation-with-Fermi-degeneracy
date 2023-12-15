@@ -124,11 +124,12 @@ def EMC(index):
                 ha='left', va='center')
         ims.append(img + [text1])
 
-
+    E_arr_forF = np.linspace(0,E_max,num=100)
+    Fermi_arr = FD(E_arr_forF)
 
     ### EMC
 
-    sim_time = 50e-12  # simulation time (s)
+    sim_time = 5e-12  # simulation time (s)
     delta_t = 5e-14  # time step (s)
     cur_time = 0
     time_arr = []
@@ -190,6 +191,7 @@ def EMC(index):
     energy = np.array(E_mean_arr)
 
     ### Plot Animation
+    plt.plot(E_arr_forF / E0, Fermi_arr, c='b')
     fig.text(0.45, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center')
     ani = animation.ArtistAnimation(fig, ims, interval = 50)
