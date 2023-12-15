@@ -28,7 +28,7 @@ def EMC(index):
     F = np.array([0,0])
     F_x = F[0]  # electric field along x (V/m)
     num_e = int(1e5)  # number of electrons
-    partition = int(11) # this must be odd number
+    partition = int(51) # this must be odd number
 
     E_pho = 60e-3  # phonon energy (eV)
     N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -132,8 +132,8 @@ def EMC(index):
         f_E_arr = np.array(f_E_arr)
         f_E_arr = f_E_arr[np.argsort(f_E_arr[:, 0])]
         img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k')
-        text1 = fig.text(0.45, 0.70, f'${round(cur_time * 1e12, 0)}$ ps',
-                ha='left', va='center')
+        text1 = fig.text(0.55, 0.65, f'${round(cur_time * 1e12, 0)}$ ps',
+                ha='left', va='center', fontsize = 24)
         ims.append(img + [text1])
 
     E_arr_forF = np.linspace(0,E_max,num=100)
@@ -204,8 +204,8 @@ def EMC(index):
 
     ### Plot Animation
     plt.plot(E_arr_forF / E0, Fermi_arr, c='b')
-    fig.text(0.45, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
-                ha='left', va='center')
+    fig.text(0.55, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
+                ha='left', va='center', fontsize = 24)
     ani = animation.ArtistAnimation(fig, ims, interval = 50)
     ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
     ani.save('imgs/research_graphs/EMC_degeneracy/v_drift E_mean time response F_0/' + ani_name, writer='pillow')

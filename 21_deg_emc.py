@@ -5,11 +5,17 @@ and plots time lapse of drift velocity and mean energy.
 import joblib
 import time as tm
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from numpy.random import rand
 from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
+from matplotlib import animation
+from matplotlib import rcParams
+
+fm = matplotlib.font_manager
+fm._get_fontconfig_fonts.cache_clear()
 
 E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
@@ -106,7 +112,7 @@ def EMC(i):
 	### EMC
 
 	sim_time = 50e-12  # simulation time (s)
-	delta_t = 5e-14  # time step (s)
+	delta_t = 4e-14  # time step (s)
 	cur_time = 0
 	time_arr = []
 	v_drift_arr = []
@@ -168,6 +174,9 @@ def EMC(i):
 	E0 = 1e-3   # unit of energy
 
 	plt.style.use('scientific')
+	plt.rcParams['mathtext.fontset'] = 'custom'
+	plt.rcParams['mathtext.rm'] = 'STIX Two Text'
+	plt.rcParams['font.family'] = ['STIX Two Text']
 	fig = plt.figure(figsize=(12, 6))
 
 	ax = fig.add_subplot(1, 2, 1)
@@ -179,11 +188,11 @@ def EMC(i):
 	ax.set_xlabel(r'Time (ps)')
 	ax.set_ylabel(r'Drift Velocity ($10^5$ m/s)')
 
-	ax.text(0.45, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
-			ha='left', va='center', transform=ax.transAxes)
-	ax.text(0.45, 0.35, r'$n_{\rm e}$ = ' + f'{N_e / 1e16:.2f} ' + 
+	ax.text(0.55, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
+			ha='left', va='center', transform=ax.transAxes, fontsize = 24)
+	ax.text(0.55, 0.30, r'$n_{\rm e}$ = ' + f'{N_e / 1e16:.2f} ' + 
 			r'$\times 10^{12}\ {\rm cm}^{-2}$',
-			ha='left', va='center', transform=ax.transAxes)
+			ha='left', va='center', transform=ax.transAxes, fontsize = 24)
 
 	for tau_0 in [1 / (W_ela + W_abs), 1 / (W_ela + W_abs + W_emi)]:
 		v_0 = e * tau_0 / m_star * F_x
