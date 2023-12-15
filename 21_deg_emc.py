@@ -8,8 +8,7 @@ from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
 
-E_F_arr = [30e-3]
-F_arr = [0]
+E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def EMC(i):
 	m_star = 0.1 * m_e  # effective mass (kg)
@@ -19,8 +18,8 @@ def EMC(i):
 
 	F = np.array([0,0])
 	F_x = F[0]  # electric field along x (V/m)
-	num_e = int(2e5)  # number of electrons
-	partition = int(13) # this must be odd number
+	num_e = int(1e5)  # number of electrons
+	partition = int(11) # this must be odd number
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -104,16 +103,19 @@ def EMC(i):
 	### EMC
 
 	sim_time = 50e-12  # simulation time (s)
-	delta_t = 1e-14  # time step (s)
+	delta_t = 5e-14  # time step (s)
 	cur_time = 0
 	time_arr = []
 	v_drift_arr = []
 	E_mean_arr = []
 	Ei_arr = np.zeros(num_e) # energy array of each electrons
-
+	time_index = 1
 	# main stream
 	while cur_time < sim_time:
 		cur_time += delta_t
+		if cur_time > time_index* (1e-12):
+			print(cur_time)
+			time_index += 1
 		time_arr.append(cur_time)
 		for i in range(num_e):
 			k_new = k_arr[:, i] + F * (e * delta_t / hbar) # free flight
