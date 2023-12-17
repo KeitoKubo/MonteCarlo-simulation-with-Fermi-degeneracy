@@ -26,7 +26,7 @@ def EMC(i):
 	F = np.array([0,0])
 	F_x = F[0]  # electric field along x (V/m)
 	num_e = int(1e5)  # number of electrons
-	partition = int(11) # this must be odd number
+	partition = int(41) # this must be odd number
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -109,12 +109,13 @@ def EMC(i):
 
 	### EMC
 
-	sim_time = 2e-12  # simulation time (s)
-	delta_t = 4e-14  # time step (s)
+	sim_time = 1e-12  # simulation time (s)
+	delta_t = 2e-15  # time step (s)
 	cur_time = 0
 	time_arr = []
 	v_drift_arr = []
 	E_mean_arr = []
+	E_diff_arr = []
 	Ei_arr = np.zeros(num_e) # energy array of each electrons
 	time_index = 1
 	# initialize Ei_arr
@@ -127,7 +128,7 @@ def EMC(i):
 	# main stream
 	while cur_time < sim_time:
 		cur_time += delta_t
-		if cur_time > time_index* (1e-12):
+		if cur_time > time_index* (5e-14):
 			print(cur_time)
 			time_index += 1
 		time_arr.append(cur_time)
@@ -166,12 +167,12 @@ def EMC(i):
 		v_drift_arr.append(vd_val)
 		E_meaned += E_diff / num_e
 		E_mean_arr.append(E_meaned)
-		E_mean_max = max(E_meaned, E_mean_max)
-		E_mean_min = max(E_meaned, E_mean_min)
+		E_diff_arr.append(E_diff / num_e)
 
 	time = np.array(time_arr)
 	v_drift = np.array(v_drift_arr)
 	energy = np.array(E_mean_arr)
+	E_diff_arr = np.array(E_diff_arr)
 
 	### Plotting
 
@@ -186,7 +187,7 @@ def EMC(i):
 		plt.rcParams['font.family'] = ['STIX Two Text']
 	fig = plt.figure(figsize=(12, 6))
 
-	ax = fig.add_subplot(1, 2, 1)
+	ax = fig.add_subplot(1, 3, 1)
 
 	ax.set_xlim(0, sim_time / T0)
 	ax.plot(time / T0, v_drift[:, 0] / V0, c='k')
@@ -199,7 +200,7 @@ def EMC(i):
 		v_0 = e * tau_0 / m_star * F_x
 		ax.axhline(v_0 / V0, c='k', ls=':')
 
-	ax = fig.add_subplot(1, 2, 2)
+	ax = fig.add_subplot(1, 3, 2)
 	ax.set_xlim(0, sim_time / T0)
 
 	ax.plot(time / T0, energy / E0, c='k')
@@ -221,6 +222,13 @@ def EMC(i):
 			r'$\times 10^{12}\ {\rm cm}^{-2}$',
 			ha='left', va='center', transform=ax.transAxes, fontsize = 18)
 	
+	ax = fig.add_subplot(1, 3, 2)
+	ax.set_xlim(0, sim_time / T0)
+	ax.plot(time / T0, E_diff_arr / E0, c='k')
+	ax.axhline(0 / E0, ls=':')
+
+	ax.set_xlabel(r'Time (ps)')
+	ax.set_ylabel(r'Gained Energy (meV)')
 
 	fig.tight_layout()
 
