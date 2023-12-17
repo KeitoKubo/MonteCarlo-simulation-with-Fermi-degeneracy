@@ -1,5 +1,5 @@
 '''
-(Windows version)
+(Windows & Linux version)
 this program generate gifs of time lapse of distribution function.
 I considered Fermi degeneracy effect.
 '''
@@ -15,8 +15,6 @@ from scipy.integrate import quad
 from matplotlib import animation
 from matplotlib import rcParams
 
-fm = matplotlib.font_manager
-fm._get_fontconfig_fonts.cache_clear()
 E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def EMC(index):

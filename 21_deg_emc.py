@@ -14,9 +14,6 @@ from scipy.integrate import quad
 from matplotlib import animation
 from matplotlib import rcParams
 
-fm = matplotlib.font_manager
-fm._get_fontconfig_fonts.cache_clear()
-
 E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def EMC(i):
@@ -24,6 +21,7 @@ def EMC(i):
 	T = 10  # temperature (K)
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[i]  # Fermi level (eV)
+	os_windows = True # Windows or Linux
 
 	F = np.array([0,0])
 	F_x = F[0]  # electric field along x (V/m)
@@ -111,7 +109,7 @@ def EMC(i):
 
 	### EMC
 
-	sim_time = 50e-12  # simulation time (s)
+	sim_time = 2e-12  # simulation time (s)
 	delta_t = 4e-14  # time step (s)
 	cur_time = 0
 	time_arr = []
@@ -123,6 +121,9 @@ def EMC(i):
 	for i in range(num_e):
 			k_i = k_arr[:,i]
 			Ei_arr[i] = ktoE(k_i)
+	E_meaned = np.mean(Ei_arr)
+	E_mean_max = E_meaned
+	E_mean_min = E_meaned
 	# main stream
 	while cur_time < sim_time:
 		cur_time += delta_t
@@ -130,6 +131,7 @@ def EMC(i):
 			print(cur_time)
 			time_index += 1
 		time_arr.append(cur_time)
+		E_diff = 0
 		for i in range(num_e):
 			k_new = k_arr[:, i] + F * (e * delta_t / hbar) # free flight
 			# scattering process
@@ -158,10 +160,14 @@ def EMC(i):
 					f_k[y_index][x_index] -= alpha
 					f_k[y_index_new][x_index_new] += alpha
 					k_arr[:,i] = k_new
-					Ei_arr[i] = ktoE(k_arr[:, i])
+					E_diff += ktoE(k_new) - Ei_arr[i]
+					Ei_arr[i] = ktoE(k_new)
 		vd_val = vd = hbar * np.mean(k_arr, axis=1) / m_star
 		v_drift_arr.append(vd_val)
-		E_mean_arr.append(np.mean(Ei_arr))
+		E_meaned += E_diff / num_e
+		E_mean_arr.append(E_meaned)
+		E_mean_max = max(E_meaned, E_mean_max)
+		E_mean_min = max(E_meaned, E_mean_min)
 
 	time = np.array(time_arr)
 	v_drift = np.array(v_drift_arr)
@@ -174,9 +180,10 @@ def EMC(i):
 	E0 = 1e-3   # unit of energy
 
 	plt.style.use('scientific')
-	plt.rcParams['mathtext.fontset'] = 'custom'
-	plt.rcParams['mathtext.rm'] = 'STIX Two Text'
-	plt.rcParams['font.family'] = ['STIX Two Text']
+	if os_windows:
+		plt.rcParams['mathtext.fontset'] = 'custom'
+		plt.rcParams['mathtext.rm'] = 'STIX Two Text'
+		plt.rcParams['font.family'] = ['STIX Two Text']
 	fig = plt.figure(figsize=(12, 6))
 
 	ax = fig.add_subplot(1, 2, 1)
@@ -187,12 +194,6 @@ def EMC(i):
 
 	ax.set_xlabel(r'Time (ps)')
 	ax.set_ylabel(r'Drift Velocity ($10^5$ m/s)')
-
-	ax.text(0.55, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
-			ha='left', va='center', transform=ax.transAxes, fontsize = 24)
-	ax.text(0.55, 0.30, r'$n_{\rm e}$ = ' + f'{N_e / 1e16:.2f} ' + 
-			r'$\times 10^{12}\ {\rm cm}^{-2}$',
-			ha='left', va='center', transform=ax.transAxes, fontsize = 24)
 
 	for tau_0 in [1 / (W_ela + W_abs), 1 / (W_ela + W_abs + W_emi)]:
 		v_0 = e * tau_0 / m_star * F_x
@@ -206,6 +207,20 @@ def EMC(i):
 
 	ax.set_xlabel(r'Time (ps)')
 	ax.set_ylabel(r'Mean Energy (meV)')
+
+	if os_windows:
+		ax.text(0.45, 0.30, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
+			ha='left', va='center', transform=ax.transAxes, fontsize = 18)
+		ax.text(0.45, 0.20, r'$\mathrm{n_{\mathrm{e}}}$ = ' + f'{N_e / 1e16:.2f} ' + 
+			r'$\times 10^{12}\ {\mathrm{cm}}^{-2}$',
+			ha='left', va='center', transform=ax.transAxes, fontsize = 18)
+	else:
+		ax.text(0.45, 0.30, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
+			ha='left', va='center', transform=ax.transAxes, fontsize = 18)
+		ax.text(0.45, 0.20, r'$n_{\rm e}$ = ' + f'{N_e / 1e16:.2f} ' + 
+			r'$\times 10^{12}\ {\rm cm}^{-2}$',
+			ha='left', va='center', transform=ax.transAxes, fontsize = 18)
+	
 
 	fig.tight_layout()
 
