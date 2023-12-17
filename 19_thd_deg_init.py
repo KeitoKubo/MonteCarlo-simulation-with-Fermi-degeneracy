@@ -92,7 +92,7 @@ def thd_init(i):
     k_max = float(k_max)
     print(k_max)
 
-    partition = int(21) # this must be odd number
+    partition = int(10) # this must be odd number
 
     k_space_particles = np.zeros((partition, partition))
     k_delta = k_max / (partition - 1)
