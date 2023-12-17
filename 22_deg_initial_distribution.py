@@ -10,14 +10,15 @@ E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def func(i):
     m_star = 0.1 * m_e  # effective mass (kg)
-    T = 10  # temperature (K)
+    T = 4.2  # temperature (K)
     kT = k_b * T / e  # thermal energy (eV)
     E_F = E_F_arr[i]  # Fermi level (eV)
+    os_windows = True
 
     F = np.array([0,0])
     F_x = F[0]  # electric field along x (V/m)
-    num_e = int(2e5)  # number of electrons
-    partition = int(13) # this must be odd number
+    num_e = int(1e5)  # number of electrons
+    partition = int(61) # this must be odd number
 
     E_pho = 60e-3  # phonon energy (eV)
     N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -100,7 +101,8 @@ def func(i):
     # generate f(E) from f_k, just converting
 
     f_E_arr = []
-    FD_E_arr = []
+    E_arr_forF = np.linspace(0,E_max,num=100)
+    FD_E_arr = FD(E_arr_forF)
 
     for y_index in range((partition - 1) // 2, partition):
         for x_index in range((partition - 1) // 2, partition):
@@ -108,28 +110,37 @@ def func(i):
             ky = (y_index + 1/2) * k_delta - k_max
             E_val = ktoE([kx, ky])
             f_val = f_k[y_index][x_index]
-            fermi_val = FD(E_val)
             f_E_arr.append(np.array([E_val,f_val]))
-            FD_E_arr.append(np.array([E_val,fermi_val]))
 
     f_E_arr = np.array(f_E_arr)
-    FD_E_arr = np.array(FD_E_arr)
 
     f_E_arr = f_E_arr[np.argsort(f_E_arr[:, 0])]
-    FD_E_arr = FD_E_arr[np.argsort(FD_E_arr[:, 0])]
 
     E0 = 1e-3   # unit of energy
-    '''plt.style.use('scientific')'''
+    plt.style.use('scientific')
+    if os_windows:
+        plt.rcParams['mathtext.fontset'] = 'custom'
+        plt.rcParams['mathtext.rm'] = 'STIX Two Text'
+        plt.rcParams['font.family'] = ['STIX Two Text']
     
-    fig, ax = plt.subplots()
-    ax.text(0.45, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
-                ha='left', va='center', transform=ax.transAxes)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    if os_windows:
+        fig.text(0.55, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
+                ha='left', va='center', transform=ax.transAxes, fontsize = 24)
+        fig.text(0.55, 0.50, f'$0$ ps',
+                ha='left', va='center', transform=ax.transAxes,fontsize = 24)
+    else:
+        fig.text(0.55, 0.40, r'$E_{\rm F}$ = ' + f'${E_F * 1e3}$ meV',
+                ha='left', va='center', transform=ax.transAxes, fontsize = 24)
+        fig.text(0.55, 0.50, f'$0$ ps',
+                ha='left', va='center', transform=ax.transAxes,fontsize = 24)
     ax.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k', label='generated function')
-    ax.plot(FD_E_arr[:,0] / E0, FD_E_arr[:,1], c='b', label='Fermi-Dirac function')
+    ax.plot(E_arr_forF / E0, FD_E_arr, c='b', label='Fermi-Dirac function')
 
-    ax.set_xlabel(r"Energy (meV)")
+    ax.set_xlabel(r'Energy (meV)')
+    ax.set_ylabel(r'Occupancy rate')
 
     plt.legend()
-    plt.show()
+    fig.savefig('imgs/EMC_degeneracy/dist_function_F_0/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(0)))
 
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(func)(i) for i in range(len(E_F_arr)))

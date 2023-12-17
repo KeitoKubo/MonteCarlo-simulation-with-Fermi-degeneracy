@@ -109,8 +109,8 @@ def EMC(i):
 
 	### EMC
 
-	sim_time = 1e-12  # simulation time (s)
-	delta_t = 2e-15  # time step (s)
+	sim_time = 50e-12  # simulation time (s)
+	delta_t = 4e-14  # time step (s)
 	cur_time = 0
 	time_arr = []
 	v_drift_arr = []
@@ -128,7 +128,7 @@ def EMC(i):
 	# main stream
 	while cur_time < sim_time:
 		cur_time += delta_t
-		if cur_time > time_index* (5e-14):
+		if cur_time > time_index* (1e-12):
 			print(cur_time)
 			time_index += 1
 		time_arr.append(cur_time)
@@ -187,11 +187,12 @@ def EMC(i):
 		plt.rcParams['font.family'] = ['STIX Two Text']
 	fig = plt.figure(figsize=(12, 6))
 
-	ax = fig.add_subplot(1, 3, 1)
+	ax = fig.add_subplot(2, 2, 1)
 
 	ax.set_xlim(0, sim_time / T0)
-	ax.plot(time / T0, v_drift[:, 0] / V0, c='k')
-	ax.plot(time / T0, v_drift[:, 1] / V0, c='b')
+	ax.plot(time / T0, v_drift[:, 0] / V0, c='k', label = "x-direction")
+	ax.plot(time / T0, v_drift[:, 1] / V0, c='b', label = "y-direction")
+	plt.legend()
 
 	ax.set_xlabel(r'Time (ps)')
 	ax.set_ylabel(r'Drift Velocity ($10^5$ m/s)')
@@ -200,7 +201,7 @@ def EMC(i):
 		v_0 = e * tau_0 / m_star * F_x
 		ax.axhline(v_0 / V0, c='k', ls=':')
 
-	ax = fig.add_subplot(1, 3, 2)
+	ax = fig.add_subplot(2, 2, 2)
 	ax.set_xlim(0, sim_time / T0)
 
 	ax.plot(time / T0, energy / E0, c='k')
@@ -222,7 +223,7 @@ def EMC(i):
 			r'$\times 10^{12}\ {\rm cm}^{-2}$',
 			ha='left', va='center', transform=ax.transAxes, fontsize = 18)
 	
-	ax = fig.add_subplot(1, 3, 2)
+	ax = fig.add_subplot(2, 2, 3)
 	ax.set_xlim(0, sim_time / T0)
 	ax.plot(time / T0, E_diff_arr / E0, c='k')
 	ax.axhline(0 / E0, ls=':')

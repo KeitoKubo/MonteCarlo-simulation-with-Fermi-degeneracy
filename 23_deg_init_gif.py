@@ -1,6 +1,6 @@
 '''
 (Windows & Linux version)
-this program generate gifs of time lapse of distribution function.
+this program generate gifs of time lapse of distribution function & the last frame image.
 I considered Fermi degeneracy effect.
 '''
 import joblib
@@ -19,7 +19,7 @@ E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def EMC(index):
     m_star = 0.1 * m_e  # effective mass (kg)
-    T = 10  # temperature (K)
+    T = 4.2  # temperature (K)
     kT = k_b * T / e  # thermal energy (eV)
     E_F = E_F_arr[index]  # Fermi level (eV)
     os_windows = True # Windows or Linux
@@ -27,7 +27,8 @@ def EMC(index):
     F = np.array([0,0])
     F_x = F[0]  # electric field along x (V/m)
     num_e = int(1e5)  # number of electrons
-    partition = int(51) # this must be odd number
+    partition = int(21) # this must be odd number
+    sim_time_index = 50
 
     E_pho = 60e-3  # phonon energy (eV)
     N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -44,7 +45,7 @@ def EMC(index):
     W_abs = N_pho / tau_p  # phonon absorption rate (/s)
     W_total = W_ela + W_emi + W_abs  # total scattering rate (/s)
 
-    E_max = np.amax([E_F, 0]) + 20 * kT  # cut-off energy (eV)
+    E_max = np.amax([E_F, 0]) + 40 * kT  # cut-off energy (eV)
 
     def FD(E):
         return 1 / (1 + np.exp((E - E_F) / kT))
@@ -117,9 +118,9 @@ def EMC(index):
         plt.rcParams['mathtext.rm'] = 'STIX Two Text'
         plt.rcParams['font.family'] = ['STIX Two Text']
    
-    fig = plt.figure(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
     ims = []
-
+    
     def Addplot():
         f_E_arr = []
         for y_index in range((partition - 1) // 2, partition):
@@ -131,17 +132,22 @@ def EMC(index):
                 f_E_arr.append(np.array([E_val,f_val]))
         f_E_arr = np.array(f_E_arr)
         f_E_arr = f_E_arr[np.argsort(f_E_arr[:, 0])]
-        img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k')
-        text1 = fig.text(0.55, 0.65, f'${round(cur_time * 1e12, 0)}$ ps',
+        if int(round(cur_time * 1e12, 0)) == 0:
+          img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k', label='generated function')
+        else:
+          img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k')
+        text1 = fig.text(0.55, 0.50, f'${round(cur_time * 1e12, 0)}$ ps',
                 ha='left', va='center', fontsize = 24)
         ims.append(img + [text1])
 
     E_arr_forF = np.linspace(0,E_max,num=100)
     Fermi_arr = FD(E_arr_forF)
 
+
+
     ### EMC
 
-    sim_time = 50e-12  # simulation time (s)
+    sim_time =  sim_time_index * 1e-12  # simulation time (s)
     delta_t = 4e-14  # time step (s)
     cur_time = 0
     time_arr = []
@@ -203,16 +209,20 @@ def EMC(index):
     energy = np.array(E_mean_arr)
 
     ### Plot Animation
-    plt.plot(E_arr_forF / E0, Fermi_arr, c='b')
+    ax.set_xlabel(r'Energy (meV)')
+    ax.set_ylabel(r'Occupancy rate')
+    plt.plot(E_arr_forF / E0, Fermi_arr, c='b', label='Fermi-Dirac function')
+    plt.legend()
     if os_windows:
          fig.text(0.55, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center', fontsize = 24)
     else:
-        fig.text(0.45, 0.40, r'$E_{/rm F}$ = ' + f'${E_F * 1e3}$ meV',
+        fig.text(0.55, 0.40, r'$E_{/rm F}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center')
     ani = animation.ArtistAnimation(fig, ims, interval = 50)
     ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
-    ani.save('imgs/research_graphs/EMC_degeneracy/v_drift E_mean time response F_0/' + ani_name, writer='pillow')
+    ani.save('imgs/EMC_degeneracy/dist_function_F_0/' + ani_name, writer='pillow')
+    fig.savefig('imgs/EMC_degeneracy/dist_function_F_0/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(sim_time_index)))
     plt.show()
 
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(index) for index in range(len(E_F_arr)))
