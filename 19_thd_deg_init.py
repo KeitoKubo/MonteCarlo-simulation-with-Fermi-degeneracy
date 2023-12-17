@@ -14,12 +14,13 @@ E_F_arr = [30e-3]
 
 def thd_init(i):
     m_star = 0.1 * m_e
-    T = 10
+    T = 4.2
     E_F_eV = E_F_arr[i]
     E_F = E_F_eV * e # Fermi energy
     # Electron density corresponding to Fermi energy
     dos2d = m_star  / (math.pi * (hbar**2))
     n_E_F = dos2d * k_b * T * math.log(1 + math.exp(E_F / (k_b * T)))
+    os_windows = True
 
     # Abstention method paramaters
     df_upper = m_star / (math.pi * (hbar**2))
@@ -91,7 +92,7 @@ def thd_init(i):
     k_max = float(k_max)
     print(k_max)
 
-    partition = int(13) # this must be odd number
+    partition = int(21) # this must be odd number
 
     k_space_particles = np.zeros((partition, partition))
     k_delta = k_max / (partition - 1)
@@ -107,11 +108,12 @@ def thd_init(i):
         y_index = int(k_y / (2.0 * k_delta))
         k_space_particles[y_index][x_index] += 1
 
-    k_space_particles_seq = []
+    f_max = -1
     for i in range(partition):
         for j in range(partition):
-            k_space_particles_seq.append(k_space_particles[i][j])
-    k_space_particles_seq = np.array(k_space_particles_seq)
+            f_max = max(f_max,k_space_particles[i][j])
+
+    k_space_particles /= f_max
     
     k_x = []
     k_y = []
@@ -129,12 +131,21 @@ def thd_init(i):
     k_begin = -1 * (partition - 1) * k_delta
     k_end = (1 * (partition - 1) + 1) * k_delta
     X,Y = np.mgrid[k_begin:k_end:2*k_delta, k_begin:k_end:2*k_delta]
+    '''
     X *= k_delta
     Y *= k_delta
+    '''
+    plt.style.use('scientific')
+    if os_windows:
+        plt.rcParams['mathtext.fontset'] = 'custom'
+        plt.rcParams['mathtext.rm'] = 'STIX Two Text'
+        plt.rcParams['font.family'] = ['STIX Two Text']
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlabel(r'$\mathrm{k_{\mathrm{x}}} \mathrm{(/m)}$')
+    ax.set_ylabel(r'$\mathrm{k_{\mathrm{y}}} \mathrm{(/m)}$')
     ax.plot_surface(X, Y, k_space_particles, cmap="autumn_r", lw=0.5, rstride=1, cstride=1)
-    ax.text2D(0.8, 0.9, "$E_F = {}$ meV".format(str(E_F_eV * 1e3)), transform=ax.transAxes)
+    ax.text2D(0.8, 0.9, r"$\mathrm{E_{\mathrm{F}}}$" + " = ${}$ meV".format(str(E_F_eV * 1e3)), transform=ax.transAxes)
     #ax.contour(k_x, k_y, k_space_particles, 10, lw=3, cmap="autumn_r", linestyles="solid", offset=-1)
     #ax.contour(k_x, k_y, k_space_particles, 10, lw=3, colors="k", linestyles="solid")
 
