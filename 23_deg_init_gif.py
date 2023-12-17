@@ -27,7 +27,7 @@ def EMC(index):
     F = np.array([0,0])
     F_x = F[0]  # electric field along x (V/m)
     num_e = int(1e5)  # number of electrons
-    partition = int(21) # this must be odd number
+    partition = int(41) # this must be odd number
     sim_time_index = 50
 
     E_pho = 60e-3  # phonon energy (eV)
@@ -223,6 +223,5 @@ def EMC(index):
     ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
     ani.save('imgs/EMC_degeneracy/dist_function_F_0/' + ani_name, writer='pillow')
     fig.savefig('imgs/EMC_degeneracy/dist_function_F_0/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(sim_time_index)))
-    plt.show()
 
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(index) for index in range(len(E_F_arr)))
