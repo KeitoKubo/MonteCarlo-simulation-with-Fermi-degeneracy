@@ -141,6 +141,7 @@ def func(i):
     ax.set_ylabel(r'Occupancy rate')
 
     plt.legend()
+    fig.tight_layout()
     fig.savefig('imgs/EMC_degeneracy/dist_function_F_0/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(0)))
 
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(func)(i) for i in range(len(E_F_arr)))

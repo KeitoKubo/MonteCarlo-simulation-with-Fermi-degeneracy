@@ -221,6 +221,7 @@ def EMC(index):
                 ha='left', va='center')
     ani = animation.ArtistAnimation(fig, ims, interval = 50)
     ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
+    fig.tight_layout()
     ani.save('imgs/EMC_degeneracy/dist_function_F_0/' + ani_name, writer='pillow')
     fig.savefig('imgs/EMC_degeneracy/dist_function_F_0/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(sim_time_index)))
 
