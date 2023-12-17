@@ -185,7 +185,7 @@ def EMC(i):
 		plt.rcParams['mathtext.fontset'] = 'custom'
 		plt.rcParams['mathtext.rm'] = 'STIX Two Text'
 		plt.rcParams['font.family'] = ['STIX Two Text']
-	fig = plt.figure(figsize=(12, 6))
+	fig = plt.figure(figsize=(12, 12))
 
 	ax = fig.add_subplot(2, 2, 1)
 
