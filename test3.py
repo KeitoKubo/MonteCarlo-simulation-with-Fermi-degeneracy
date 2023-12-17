@@ -27,7 +27,7 @@ def EMC(index):
     F = np.array([0,0])
     F_x = F[0]  # electric field along x (V/m)
     num_e = int(1e5)  # number of electrons
-    partition = int(41) # this must be odd number
+    partition = int(61) # this must be odd number
     sim_time_index = 50
 
     E_pho = 60e-3  # phonon energy (eV)

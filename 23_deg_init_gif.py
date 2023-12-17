@@ -27,7 +27,7 @@ def EMC(index):
     F = np.array([0,0])
     F_x = F[0]  # electric field along x (V/m)
     num_e = int(1e5)  # number of electrons
-    partition = int(31) # this must be odd number
+    partition = int(51) # this must be odd number
     sim_time_index = 50
 
     E_pho = 60e-3  # phonon energy (eV)
@@ -136,7 +136,7 @@ def EMC(index):
           img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k', label='generated function')
         else:
           img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k')
-        text1 = fig.text(0.55, 0.50, f'${round(cur_time * 1e12, 0)}$ ps',
+        text1 = fig.text(0.7, 0.50, f'${round(cur_time * 1e12, 0)}$ ps',
                 ha='left', va='center', fontsize = 24)
         ims.append(img + [text1])
 
@@ -214,10 +214,10 @@ def EMC(index):
     plt.plot(E_arr_forF / E0, Fermi_arr, c='b', label='Fermi-Dirac function')
     plt.legend()
     if os_windows:
-         fig.text(0.55, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
+         fig.text(0.7, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center', fontsize = 24)
     else:
-        fig.text(0.55, 0.40, r'$E_{/rm F}$ = ' + f'${E_F * 1e3}$ meV',
+        fig.text(0.7, 0.40, r'$E_{/rm F}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center')
     ani = animation.ArtistAnimation(fig, ims, interval = 50)
     ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
