@@ -23,11 +23,11 @@ def EMC(i):
 	E_F = E_F_arr[i]  # Fermi level (eV)
 	os_windows = True # Windows or Linux
 
-	F = np.array([2e4,0])
+	F = np.array([1e5,0])
 	F_x = F[0]  # electric field along x (V/m)
 	num_e = int(1e5)  # number of electrons
-	partition = int(41) # this must be odd number
-	sim_time_index = 110
+	partition = int(31) # this must be odd number
+	sim_time_index = 1
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -111,7 +111,7 @@ def EMC(i):
 	### EMC
 
 	sim_time = sim_time_index * 1e-12  # simulation time (s)
-	delta_t = 4e-14  # time step (s)
+	delta_t = 2e-15  # time step (s)
 	cur_time = 0
 	time_arr = []
 	v_drift_arr = []
@@ -129,7 +129,7 @@ def EMC(i):
 	# main stream
 	while cur_time < sim_time:
 		cur_time += delta_t
-		if cur_time > time_index* (1e-12):
+		if cur_time > time_index* (1e-13):
 			print(cur_time)
 			time_index += 1
 		time_arr.append(cur_time)
@@ -233,6 +233,6 @@ def EMC(i):
 	ax.set_ylabel(r'Gained Energy (meV)')
 
 	fig.tight_layout()
-	fig.savefig('imgs/EMC_degeneracy/v_drift E_mean time response F_2e4/' + "EF_" + str(int(E_F * 1e3)) + "meV")
+	fig.savefig('imgs/EMC_degeneracy/start-up time response/F_1e5/' + "EF_" + str(int(E_F * 1e3)) + "meV")
 
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(i) for i in range(len(E_F_arr)))
