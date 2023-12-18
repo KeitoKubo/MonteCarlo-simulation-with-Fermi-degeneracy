@@ -15,19 +15,18 @@ from scipy.integrate import quad
 from matplotlib import animation
 from matplotlib import rcParams
 
-E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
+p_arr = [11,21,31,41,51,61]
 
 def EMC(index):
     m_star = 0.1 * m_e  # effective mass (kg)
     T = 4.2  # temperature (K)
     kT = k_b * T / e  # thermal energy (eV)
-    E_F = E_F_arr[index]  # Fermi level (eV)
+    E_F = 30e-3  # Fermi level (eV)
     os_windows = True # Windows or Linux
 
     F = np.array([0,0])
-    F_x = F[0]  # electric field along x (V/m)
     num_e = int(1e5)  # number of electrons
-    partition = int(61) # this must be odd number
+    partition = int(p_arr[index]) # this must be odd number
     sim_time_index = 50
 
     E_pho = 60e-3  # phonon energy (eV)
@@ -72,13 +71,6 @@ def EMC(index):
             if df_val < df_true:
                 return E_val
 
-    def f(E): # calculate the mean energy
-        v = E / (1 + np.exp((E - E_F) / kT))
-        return v / (N_e / dos2d)
-    E_mean, err = quad(f, 0, E_max)
-
-
-
     ### generate the initial thermal distribution
 
     k_ini = []
@@ -101,7 +93,6 @@ def EMC(index):
         y_index = int(k_y / k_delta)
         return x_index, y_index
 
-
     alpha = (2*np.pi)**2 * N_e / (g_s * num_e * k_delta**2)
     for i in range(len(k_arr[0])):
         x_index, y_index = Get_fk_index(k_arr[:, i])
@@ -117,42 +108,12 @@ def EMC(index):
         plt.rcParams['mathtext.fontset'] = 'custom'
         plt.rcParams['mathtext.rm'] = 'STIX Two Text'
         plt.rcParams['font.family'] = ['STIX Two Text']
-   
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ims = []
-    
-    def Addplot():
-        f_E_arr = []
-        for y_index in range((partition - 1) // 2, partition):
-            for x_index in range((partition - 1) // 2, partition):
-                kx = (x_index + 1/2) * k_delta - k_max
-                ky = (y_index + 1/2) * k_delta - k_max
-                E_val = ktoE([kx, ky])
-                f_val = f_k[y_index][x_index]
-                f_E_arr.append(np.array([E_val,f_val]))
-        f_E_arr = np.array(f_E_arr)
-        f_E_arr = f_E_arr[np.argsort(f_E_arr[:, 0])]
-        if int(round(cur_time * 1e12, 0)) == 0:
-          img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k', label='generated function')
-        else:
-          img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k')
-        text1 = fig.text(0.55, 0.50, f'${round(cur_time * 1e12, 0)}$ ps',
-                ha='left', va='center', fontsize = 24)
-        ims.append(img + [text1])
-
-    E_arr_forF = np.linspace(0,E_max,num=100)
-    Fermi_arr = FD(E_arr_forF)
-
-
-
-    ### EMC
+    ### EM
 
     sim_time =  sim_time_index * 1e-12  # simulation time (s)
     delta_t = 4e-14  # time step (s)
     cur_time = 0
     time_arr = []
-    v_drift_arr = []
-    E_mean_arr = []
     Ei_arr = np.zeros(num_e) # energy array of each electrons
     time_index = 1
     counter = 0 # when this can be diveded by 0, add f to imageset
@@ -198,31 +159,25 @@ def EMC(index):
                     f_k[y_index_new][x_index_new] += alpha
                     k_arr[:,i] = k_new
                     Ei_arr[i] = ktoE(k_arr[:, i])
-        vd_val = hbar * np.mean(k_arr, axis=1) / m_star
-        v_drift_arr.append(vd_val)
-        E_mean_arr.append(np.mean(Ei_arr))
-        if counter % 10 == 0:
-            _ = Addplot()
 
-    time = np.array(time_arr)
-    v_drift = np.array(v_drift_arr)
-    energy = np.array(E_mean_arr)
+    sum = 0
+    total = 0
+    ex_val = 0
+    for y_index in range((partition - 1) // 2, partition):
+        for x_index in range((partition - 1) // 2, partition):
+            k_x = x_index - (partition - 1) // 2
+            k_y = y_index - (partition - 1) // 2
+            E_tmp = ktoE(np.array([k_x, k_y]))
+            fermi_val = FD(E_tmp)
+            if fermi_val > 0.8:
+                total += 1
+                if f_k[y_index][x_index] > 1.0:
+                    ex_val += f_k[y_index][x_index] - 1.0
+                    sum += 1
+            
+    ex_val_div = 0
+    if sum != 0:
+        ex_val_div = ex_val / sum
+    print(str(partition) + ": " + str(sum / total * 100) + ": " + str(ex_val_div))
 
-    ### Plot Animation
-    ax.set_xlabel(r'Energy (meV)')
-    ax.set_ylabel(r'Occupancy rate')
-    plt.plot(E_arr_forF / E0, Fermi_arr, c='b', label='Fermi-Dirac function')
-    plt.legend()
-    if os_windows:
-         fig.text(0.55, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
-                ha='left', va='center', fontsize = 24)
-    else:
-        fig.text(0.55, 0.40, r'$E_{/rm F}$ = ' + f'${E_F * 1e3}$ meV',
-                ha='left', va='center')
-    ani = animation.ArtistAnimation(fig, ims, interval = 50)
-    ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
-    fig.tight_layout()
-    ani.save('imgs/EMC_degeneracy/dist_function_F_0/' + ani_name, writer='pillow')
-    fig.savefig('imgs/EMC_degeneracy/dist_function_F_0/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(sim_time_index)))
-
-_ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(index) for index in range(len(E_F_arr)))
+_ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(index) for index in range(len(p_arr)))

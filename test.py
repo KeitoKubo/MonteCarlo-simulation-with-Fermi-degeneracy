@@ -26,8 +26,7 @@ def EMC(i):
 	F = np.array([1e5,0])
 	F_x = F[0]  # electric field along x (V/m)
 	num_e = int(1e5)  # number of electrons
-	partition = int(31) # this must be odd number
-	sim_time_index = 1
+	partition = int(41) # this must be odd number
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -110,8 +109,8 @@ def EMC(i):
 
 	### EMC
 
-	sim_time = sim_time_index * 1e-12  # simulation time (s)
-	delta_t = 2e-15  # time step (s)
+	sim_time = 50e-12  # simulation time (s)
+	delta_t = 4e-14  # time step (s)
 	cur_time = 0
 	time_arr = []
 	v_drift_arr = []
@@ -124,51 +123,57 @@ def EMC(i):
 			k_i = k_arr[:,i]
 			Ei_arr[i] = ktoE(k_i)
 	E_meaned = np.mean(Ei_arr)
-	E_mean_max = E_meaned
-	E_mean_min = E_meaned
+
+	F_x_arr = np.array([0, F_x])
 	# main stream
-	while cur_time < sim_time:
-		cur_time += delta_t
-		if cur_time > time_index* (1e-13):
-			print(cur_time)
-			time_index += 1
-		time_arr.append(cur_time)
-		E_diff = 0
-		for i in range(num_e):
-			k_new = k_arr[:, i] + F * (e * delta_t / hbar) # free flight
-			# scattering process
-			if rand() < W_total * delta_t:
-				r = rand()
-				if r < W_ela / W_total:
-					# elastic scattering 
-					k_new = krandom(k_new[0]**2 + k_new[1]**2) 
-				elif r < (W_ela + W_emi) / W_total:
-					# phonon emission
-					E_val = ktoE(k_new)
-					if E_val > E_pho:
-						E_val -= E_pho
+	for j in range(2):
+		cur_time = 0
+		time_index = 1
+		F_tmp = np.array([F_x_arr[j], F[1]])
+		while cur_time < sim_time:
+			cur_time += delta_t
+			if cur_time > time_index* (1e-12):
+				print(cur_time)
+				time_index += 1
+			if j == 1:
+				time_arr.append(cur_time)
+			E_diff = 0
+			for i in range(num_e):
+				k_new = k_arr[:, i] + F_tmp * (e * delta_t / hbar) # free flight
+				# scattering process
+				if rand() < W_total * delta_t:
+					r = rand()
+					if r < W_ela / W_total:
+						# elastic scattering 
+						k_new = krandom(k_new[0]**2 + k_new[1]**2) 
+					elif r < (W_ela + W_emi) / W_total:
+						# phonon emission
+						E_val = ktoE(k_new)
+						if E_val > E_pho:
+							E_val -= E_pho
+							k_new = Etok(E_val)
+					else:
+						# phonon absorption
+						E_val = ktoE(k_new)
+						E_val += E_pho
 						k_new = Etok(E_val)
-				else:
-					# phonon absorption
-					E_val = ktoE(k_new)
-					E_val += E_pho
-					k_new = Etok(E_val)
-			# check if k could be updated
-			x_index_new, y_index_new = Get_fk_index(k_new)
-			if x_index_new >= 0 and x_index_new < partition and y_index_new >= 0 and y_index_new < partition:
-				if rand() < (1 - f_k[y_index_new][x_index_new]):
-					# updated k
-					x_index, y_index = Get_fk_index(k_arr[:, i])
-					f_k[y_index][x_index] -= alpha
-					f_k[y_index_new][x_index_new] += alpha
-					k_arr[:,i] = k_new
-					E_diff += ktoE(k_new) - Ei_arr[i]
-					Ei_arr[i] = ktoE(k_new)
-		vd_val = vd = hbar * np.mean(k_arr, axis=1) / m_star
-		v_drift_arr.append(vd_val)
-		E_meaned += E_diff / num_e
-		E_mean_arr.append(E_meaned)
-		E_diff_arr.append(E_diff / num_e)
+				# check if k could be updated
+				x_index_new, y_index_new = Get_fk_index(k_new)
+				if x_index_new >= 0 and x_index_new < partition and y_index_new >= 0 and y_index_new < partition:
+					if rand() < (1 - f_k[y_index_new][x_index_new]):
+						# updated k
+						x_index, y_index = Get_fk_index(k_arr[:, i])
+						f_k[y_index][x_index] -= alpha
+						f_k[y_index_new][x_index_new] += alpha
+						k_arr[:,i] = k_new
+						E_diff += ktoE(k_new) - Ei_arr[i]
+						Ei_arr[i] = ktoE(k_new)
+			if j==1:
+				vd_val = vd = hbar * np.mean(k_arr, axis=1) / m_star
+				v_drift_arr.append(vd_val)
+				E_meaned += E_diff / num_e
+				E_mean_arr.append(E_meaned)
+				E_diff_arr.append(E_diff / num_e)
 
 	time = np.array(time_arr)
 	v_drift = np.array(v_drift_arr)
@@ -233,6 +238,10 @@ def EMC(i):
 	ax.set_ylabel(r'Gained Energy (meV)')
 
 	fig.tight_layout()
-	fig.savefig('imgs/EMC_degeneracy/start-up time response/F_1e5/' + "EF_" + str(int(E_F * 1e3)) + "meV")
 
+	plt.show()
+
+begin_time = tm.time()
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC)(i) for i in range(len(E_F_arr)))
+end_time = tm.time()
+print(end_time - begin_time)
