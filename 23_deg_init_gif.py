@@ -25,7 +25,7 @@ def EMC(index):
 
     F = np.array([0,0])
     F_x = F[0]  # electric field along x (V/m)
-    sim_time_index = 50
+    sim_time_index = 2
 
     E_pho = 60e-3  # phonon energy (eV)
     N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -214,7 +214,7 @@ def EMC(index):
          fig.text(0.7, 0.40, r'$\mathrm{E_{\mathrm{F}}}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center', fontsize = 24)
     else:
-        fig.text(0.7, 0.40, r'$E_{/rm F}$ = ' + f'${E_F * 1e3}$ meV',
+        fig.text(0.7, 0.40, r'$E_{F}$ = ' + f'${E_F * 1e3}$ meV',
                 ha='left', va='center')
     ani = animation.ArtistAnimation(fig, ims, interval = 50)
     ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
