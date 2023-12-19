@@ -13,20 +13,17 @@ from scipy.constants import k as k_b
 from scipy.integrate import quad
 from matplotlib import animation
 from matplotlib import rcParams
+from variables import os_windows, T, partition, num_e
 
 E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
 
 def EMC(i):
 	m_star = 0.1 * m_e  # effective mass (kg)
-	T = 10  # temperature (K)
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[i]  # Fermi level (eV)
-	os_windows = True # Windows or Linux
 
 	F = np.array([0,0])
 	F_x = F[0]  # electric field along x (V/m)
-	num_e = int(1e5)  # number of electrons
-	partition = int(41) # this must be odd number
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution

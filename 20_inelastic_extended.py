@@ -5,7 +5,7 @@ from numpy.random import rand
 from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
-
+from variables import os_windows, T, partition, num_e
 
 E_F_arr = [60e-3]
 
