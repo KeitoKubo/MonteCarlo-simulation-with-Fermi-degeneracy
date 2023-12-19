@@ -1,4 +1,4 @@
-os_windows = False
+os_windows = True
 T = 4.2
-partition = 31
-num_e = int(1e5)
+partition = 41
+num_e = int(2e5)
