@@ -15,12 +15,13 @@ from matplotlib import animation
 from matplotlib import rcParams
 from variables import os_windows, T, partition, num_e
 
-E_F_arr = [30e-3]
+E_F_arr = [10e-3]
 
 def EMC(i):
 	m_star = 0.1 * m_e  # effective mass (kg)
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[i]  # Fermi level (eV)
+	sim_time_index = 50
 
 	F = np.array([1e5,0])
 	F_x = F[0]  # electric field along x (V/m)
@@ -106,7 +107,7 @@ def EMC(i):
 
 	### EMC
 
-	sim_time = 50e-12  # simulation time (s)
+	sim_time =  sim_time_index * 1e-12  # simulation time (s)
 	delta_t = 4e-14  # time step (s)
 	cur_time = 0
 	time_arr = []
@@ -132,7 +133,12 @@ def EMC(i):
 		E_diff = 0
 		for i in range(num_e):
 			k_new = k_arr[:, i] + F * (e * delta_t / hbar) # free flight
-			# scattering process
+			x_index_1, y_index_1 = Get_fk_index(k_arr[:, i])
+			x_index_2, y_index_2 = Get_fk_index(k_new)
+			f_k[y_index_1][x_index_1] -= alpha
+			f_k[y_index_2][x_index_2] += alpha
+			k_arr[:, i] = k_new
+		# scattering process
 			if rand() < W_total * delta_t:
 				r = rand()
 				if r < W_ela / W_total:
