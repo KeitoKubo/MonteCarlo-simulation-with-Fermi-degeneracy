@@ -17,9 +17,9 @@ def EMC_NoElectricField_gifs(joblib_index):
 	cell_row = partition
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[joblib_index]  # Fermi level (eV)
-	F = np.array([0,0])
+	F = np.array([1e4,0])
 	F_x = F[0]  # electric field along x (V/m)
-	sim_time_index = 50
+	sim_time_index = 10
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -159,14 +159,39 @@ def EMC_NoElectricField_gifs(joblib_index):
 	### EMC
 
 	sim_time =  sim_time_index * 1e-12  # simulation time (s)
-	delta_t = 4e-14  # time step (s)
+	opt_res = 10 # optical resolution correnponding to a cell length
+	delta_t = k_delta * hbar / (opt_res * F_x * e)
 	cur_time = 0
 	time_arr = []
 	v_drift_arr = []
 	E_mean_arr = []
 	Ei_arr = np.zeros(num_e) # energy array of each electrons
 	time_index = 1
-	counter = 0 # when this can be diveded by 0, add f to imageset
+	k_bias_index = 0
+	timer = 0
+
+	def FreeFlight(): # Free Flight process when the grid moves for k_delta
+		# consider in k_arr
+		for i in range(len(k_arr)):
+			k_arr[0][i] += k_delta
+
+		#consider in k-space grid
+		error_num_e = 0
+		for y_index in range(cell_row):
+			if f_arr_k[cell_row - 1][y_index] >= alpha:
+				error_num_e += f_arr_k[cell_row - 1][y_index] / alpha
+		error_num_e = int(error_num_e)
+		print("error num e: " + str(error_num_e))
+
+		for y_index in range(cell_row):
+			f_arr_k[cell_row - 1][y_index] += f_arr_k[cell_row - 2][y_index]
+
+		for x_index in range(1, cell_row - 1):
+			for y_index in range(cell_row):
+				f_arr_k[y_index][x_index] = f_arr_k[y_index][x_index - 1]
+
+		for y_index in range(cell_row):
+			f_arr_k[0][y_index] = 0
 
 	# initialize Ei_arr
 	for i in range(num_e):
@@ -174,14 +199,15 @@ def EMC_NoElectricField_gifs(joblib_index):
 		Ei_arr[i] = ktoE(k_i)
 	# main stream
 	while cur_time < sim_time:
-		counter += 1
+		k_bias_index += 1
 		cur_time += delta_t
+		timer += delta_t
 		if cur_time > time_index* (1e-12):
 			print(cur_time)
 			time_index += 1
-		time_arr.append(cur_time)
 		for i in range(num_e):
-			k_new = k_arr[:, i] + F * (e * delta_t / hbar) # free flight
+			k_bias = k_bias_index * F_x * e * delta_t / hbar
+			k_new = np.array([k_arr[0,i] + k_bias, k_arr[1,i]])
 			# scattering process
 			if rand() < W_total * delta_t:
 				r = rand()
@@ -199,21 +225,22 @@ def EMC_NoElectricField_gifs(joblib_index):
 					E_val = ktoE(k_new)
 					E_val += E_pho
 					k_new = Etok(E_val)
+			k_new[0] -= k_bias
 			# check if k could be updated
 			x_index_new, y_index_new = Get_fk_index(k_new)
 			if x_index_new >= 0 and x_index_new < partition and y_index_new >= 0 and y_index_new < partition:
 				if rand() < (1 - f_arr_k[y_index_new][x_index_new]):
 					# updated k
-					x_index, y_index = Get_fk_index(k_arr[:, i])
-					f_arr_k[y_index][x_index] -= alpha
-					f_arr_k[y_index_new][x_index_new] += alpha
 					k_arr[:,i] = k_new
-					Ei_arr[i] = ktoE(k_arr[:, i])
-		vd_val = hbar * np.mean(k_arr, axis=1) / m_star
-		v_drift_arr.append(vd_val)
-		E_mean_arr.append(np.mean(Ei_arr))
-		if counter % 10 == 0:
-			_ = Addplot()
+		if k_bias_index % opt_res == 0:
+			FreeFlight()
+			time_arr.append(cur_time)
+			vd_val = hbar * np.mean(k_arr, axis=1) / m_star
+			v_drift_arr.append(vd_val)
+			E_mean_arr.append(np.mean(Ei_arr))
+		if timer > 1e-12: # plot in every 1ps
+			Addplot()
+			timer = 0
 
 	time = np.array(time_arr)
 	v_drift = np.array(v_drift_arr)
@@ -233,7 +260,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 	ani = animation.ArtistAnimation(fig, ims, interval = 50)
 	ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
 	fig.tight_layout()
-	ani.save('../imgs/EMC_degeneracy/EMC_NoElectricField_gifs/' + ani_name, writer='pillow')
-	fig.savefig('../imgs/EMC_degeneracy/EMC_NoElectricField_gifs/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(sim_time_index)))
+	ani.save('../imgs/EMC_degeneracy/EMC_gif_NoEnergyDependency/' + ani_name, writer='pillow')
+	fig.savefig('../imgs/EMC_degeneracy/EMC_gif_NoEnergyDependency/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(sim_time_index)))
 
 _ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC_NoElectricField_gifs)(index) for index in range(len(E_F_arr)))
