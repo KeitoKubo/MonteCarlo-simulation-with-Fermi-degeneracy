@@ -1,5 +1,3 @@
-#Generate Initial Distribution like getting electrons follow FD distribution.
-# N_mc is calculated later in this method.
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,7 +17,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 	E_F = E_F_arr[joblib_index]  # Fermi level (eV)
 	F = np.array([1e4,0])
 	F_x = F[0]  # electric field along x (V/m)
-	sim_time_index = 10
+	sim_time_index = 50
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -159,7 +157,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 	### EMC
 
 	sim_time =  sim_time_index * 1e-12  # simulation time (s)
-	opt_res = 10 # optical resolution correnponding to a cell length
+	opt_res = 20 # optical resolution correnponding to a cell length
 	delta_t = k_delta * hbar / (opt_res * F_x * e)
 	cur_time = 0
 	time_arr = []
@@ -178,20 +176,20 @@ def EMC_NoElectricField_gifs(joblib_index):
 		#consider in k-space grid
 		error_num_e = 0
 		for y_index in range(cell_row):
-			if f_arr_k[cell_row - 1][y_index] >= alpha:
-				error_num_e += f_arr_k[cell_row - 1][y_index] / alpha
+			if f_arr_k[y_index][cell_row - 1] >= alpha:
+				error_num_e += f_arr_k[y_index][cell_row - 1] / alpha
 		error_num_e = int(error_num_e)
 		print("error num e: " + str(error_num_e))
 
 		for y_index in range(cell_row):
-			f_arr_k[cell_row - 1][y_index] += f_arr_k[cell_row - 2][y_index]
+			f_arr_k[y_index][cell_row - 1] += f_arr_k[y_index][cell_row - 2]
 
-		for x_index in range(1, cell_row - 1):
+		for x_index in range(cell_row - 2, 1, -1):
 			for y_index in range(cell_row):
 				f_arr_k[y_index][x_index] = f_arr_k[y_index][x_index - 1]
 
 		for y_index in range(cell_row):
-			f_arr_k[0][y_index] = 0
+			f_arr_k[y_index][0] = 0
 
 	# initialize Ei_arr
 	for i in range(num_e):
