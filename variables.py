@@ -1,6 +1,6 @@
 from scipy.constants import e, hbar, m_e
 
-os_windows = True
+os_windows = False
 T = 4.2
 partition = 61
 num_e = int(1e5)

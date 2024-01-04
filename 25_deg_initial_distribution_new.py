@@ -5,12 +5,11 @@ from numpy.random import rand
 from scipy.constants import e, hbar, m_e
 from scipy.constants import k as k_b
 from scipy.integrate import quad
-from variables import os_windows, T, partition, num_e
+from variables import os_windows, T, partition, num_e, m_star
 
-E_F_arr = [10e-3, 20e-3, 30e-3, 50e-3]
+E_F_arr = [10e-3]
 
 def func(i):
-	m_star = 0.1 * m_e  # effective mass (kg)
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = E_F_arr[i]  # Fermi level (eV)
 
