@@ -18,7 +18,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 	E_F = 10e-3  # Fermi level (eV)
 	F = np.array([5e3,0])
 	F_x = F[0]  # electric field along x (V/m)
-	sim_time_index = 10
+	sim_time_index = 50
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
