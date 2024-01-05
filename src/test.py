@@ -16,9 +16,9 @@ def EMC_NoElectricField_gifs(joblib_index):
 	global partition
 	kT = k_b * T / e  # thermal energy (eV)
 	E_F = 10e-3  # Fermi level (eV)
-	F = np.array([1e4,0])
+	F = np.array([5e3,0])
 	F_x = F[0]  # electric field along x (V/m)
-	sim_time_index = 50
+	sim_time_index = 10
 
 	E_pho = 60e-3  # phonon energy (eV)
 	N_pho = 1 / (np.exp(E_pho / kT) - 1)  # phonon distribution
@@ -38,14 +38,16 @@ def EMC_NoElectricField_gifs(joblib_index):
 	E_max = np.amax([E_F, 0]) + 200 * kT  # cut-off energy (eV)
 	k_max = np.sqrt(2 * m_star * E_max * e / hbar**2)
 	pow = np.floor(np.log10(k_max))
-	k_max = int(np.ceil(k_max / 10**pow)) * 10**pow
+	k_max = int(np.ceil(k_max / 10**(pow - 1))) * 10**(pow - 1)
 
+	# p=61 when E_max = E_F + 20KT, so p should be multiplied to correspond to it.
 	p_multi = int(E_max / (np.amax([E_F, 0]) + 20 * kT))
 	partition = int(partition * p_multi)
 	if partition % 2 == 0:
 		partition -= 1
 	cell_row = partition
-	print("taup: " + str(tau_p) + ", partition" + str(partition))
+	print("taup: " + str(tau_p) + ", partition" + str(partition) + ", cell row: "
+	    + str(cell_row) + ", E_max: " + str(E_max * 1e3) + ", k_max: " + str(k_max))
 
 	def FD(E):
 		return 1 / (1 + np.exp((E - E_F) / kT))
@@ -67,7 +69,6 @@ def EMC_NoElectricField_gifs(joblib_index):
 	def f(E): # calculate the mean energy
 		v = E / (1 + np.exp((E - E_F) / kT))
 		return v / (N_e / dos2d)
-	E_mean, err = quad(f, 0, E_max)
 
 	def Get_fk_index(k):
 		k_x = k[0] + k_max
@@ -83,7 +84,6 @@ def EMC_NoElectricField_gifs(joblib_index):
 	k_delta = 2 * k_max / cell_row # length of one cell edge
 	fd_arr_k = np.zeros((cell_row, cell_row))
 	p_num_arr = np.zeros((cell_row, cell_row))
-	recent_error_num_e = 0
 
 	def index_to_k(y_index, x_index):
 		k_x = x_index * k_delta - k_max + 1/2 * k_delta
@@ -140,11 +140,11 @@ def EMC_NoElectricField_gifs(joblib_index):
 
 	fig, ax = plt.subplots(figsize=(12, 6))
 	ims = []
-
+	recent_error_num_e = 0
 	def Addplot():
 		f_E_arr = []
-		for y_index in range((partition - 1) // 2, partition):
-			for x_index in range((partition - 1) // 2, partition):
+		for y_index in range(partition):
+			for x_index in range(partition):
 				kx = (x_index + 1/2) * k_delta - k_max
 				ky = (y_index + 1/2) * k_delta - k_max
 				E_val = ktoE([kx, ky])
@@ -160,7 +160,8 @@ def EMC_NoElectricField_gifs(joblib_index):
 				ha='left', va='center', fontsize = 24)
 		text2 = fig.text(0.7, 0.60, "Error electrons: " + str(int(recent_error_num_e)),
 				ha='left', va='center', fontsize = 24)
-		ims.append(img + [text1] + [text2])
+		text3 = fig.text(0.7, 0.70, f'F = ${round(F_x / 1e3, 1)}$ kV/m')
+		ims.append(img + [text1] + [text2] + [text3])
 
 	E_arr_forF = np.linspace(0,E_max,num=100)
 	Fermi_arr = FD(E_arr_forF)
@@ -168,7 +169,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 	### EMC
 
 	sim_time =  sim_time_index * 1e-12  # simulation time (s)
-	opt_res = 20 # optical resolution correnponding to a cell length
+	opt_res = 30 # optical resolution correnponding to a cell length
 	delta_t = k_delta * hbar / (opt_res * F_x * e)
 	cur_time = 0
 	time_arr = []
@@ -180,6 +181,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 	timer = 0
 
 	def FreeFlight(): # Free Flight process when the grid moves for k_delta
+		nonlocal recent_error_num_e
 		# consider in k_arr
 		for i in range(len(k_arr)):
 			k_arr[0][i] += k_delta
@@ -194,9 +196,9 @@ def EMC_NoElectricField_gifs(joblib_index):
 		recent_error_num_e = error_num_e
 
 		for y_index in range(cell_row):
-			f_arr_k[y_index][cell_row - 1] += f_arr_k[y_index][cell_row - 2]
+			f_arr_k[y_index][cell_row - 2] += f_arr_k[y_index][cell_row - 1]
 
-		for x_index in range(cell_row - 2, 1, -1):
+		for x_index in range(cell_row - 1, 0, -1):
 			for y_index in range(cell_row):
 				f_arr_k[y_index][x_index] = f_arr_k[y_index][x_index - 1]
 
@@ -266,7 +268,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 				ha='left', va='center', fontsize = 24)
 	else:
 		fig.text(0.7, 0.40, r'$E_{F}$ = ' + f'${E_F * 1e3}$ meV',
-				ha='left', va='center')
+				ha='left', va='center', fontsize = 24)
 	ani = animation.ArtistAnimation(fig, ims, interval = 50)
 	ani_name = "taup_" + str(tau_p) + ".gif"
 	fig.tight_layout()
