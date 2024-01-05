@@ -9,12 +9,13 @@ from scipy.integrate import quad
 from variables import os_windows, T, partition, num_e, m_star
 
 E_F_arr = [5e-3, 10e-3, 15e-3]
+tau_p_arr = [1e-12, 5e-13, 2e-13]
 
 def EMC_NoElectricField_gifs(joblib_index):
-	num_e = int(1e5)
-	cell_row = partition
+	global num_e
+	global partition
 	kT = k_b * T / e  # thermal energy (eV)
-	E_F = E_F_arr[joblib_index]  # Fermi level (eV)
+	E_F = 10e-3  # Fermi level (eV)
 	F = np.array([1e4,0])
 	F_x = F[0]  # electric field along x (V/m)
 	sim_time_index = 50
@@ -27,17 +28,24 @@ def EMC_NoElectricField_gifs(joblib_index):
 	N_e = dos2d * kT * np.log(1 + np.exp(E_F / kT))  # electron density (/m2)
 
 	tau_e = 1e-12  # elastic scattering time (s)
-	tau_p = 1e-12  # phonon scattering time for T = 0 (s)
+	tau_p = tau_p_arr[joblib_index]  # phonon scattering time for T = 0 (s)
 	W_ela = 1 / tau_e  # elastic scattering rate (/s)
 	W_emi = (1 + N_pho) / tau_p  # phonon emission rate (/s)
 	W_abs = N_pho / tau_p  # phonon absorption rate (/s)
 	W_total = W_ela + W_emi + W_abs  # total scattering rate (/s)
 
-	E_max = np.amax([E_F, 0]) + 20 * kT  # cut-off energy (eV)
+	# E_max will determine the size of k-space grid
+	E_max = np.amax([E_F, 0]) + 200 * kT  # cut-off energy (eV)
 	k_max = np.sqrt(2 * m_star * E_max * e / hbar**2)
 	pow = np.floor(np.log10(k_max))
 	k_max = int(np.ceil(k_max / 10**pow)) * 10**pow
 
+	p_multi = int(E_max / (np.amax([E_F, 0]) + 20 * kT))
+	partition = int(partition * p_multi)
+	if partition % 2 == 0:
+		partition -= 1
+	cell_row = partition
+	print("taup: " + str(tau_p) + ", partition" + str(partition))
 
 	def FD(E):
 		return 1 / (1 + np.exp((E - E_F) / kT))
@@ -75,6 +83,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 	k_delta = 2 * k_max / cell_row # length of one cell edge
 	fd_arr_k = np.zeros((cell_row, cell_row))
 	p_num_arr = np.zeros((cell_row, cell_row))
+	recent_error_num_e = 0
 
 	def index_to_k(y_index, x_index):
 		k_x = x_index * k_delta - k_max + 1/2 * k_delta
@@ -149,7 +158,9 @@ def EMC_NoElectricField_gifs(joblib_index):
 			img = plt.plot(f_E_arr[:,0] / E0, f_E_arr[:,1], c='k')
 		text1 = fig.text(0.7, 0.50, f'${round(cur_time * 1e12, 0)}$ ps',
 				ha='left', va='center', fontsize = 24)
-		ims.append(img + [text1])
+		text2 = fig.text(0.7, 0.60, "Error electrons: " + str(int(recent_error_num_e)),
+				ha='left', va='center', fontsize = 24)
+		ims.append(img + [text1] + [text2])
 
 	E_arr_forF = np.linspace(0,E_max,num=100)
 	Fermi_arr = FD(E_arr_forF)
@@ -180,6 +191,7 @@ def EMC_NoElectricField_gifs(joblib_index):
 				error_num_e += f_arr_k[y_index][cell_row - 1] / alpha
 		error_num_e = int(error_num_e)
 		print("error num e: " + str(error_num_e))
+		recent_error_num_e = error_num_e
 
 		for y_index in range(cell_row):
 			f_arr_k[y_index][cell_row - 1] += f_arr_k[y_index][cell_row - 2]
@@ -256,9 +268,9 @@ def EMC_NoElectricField_gifs(joblib_index):
 		fig.text(0.7, 0.40, r'$E_{F}$ = ' + f'${E_F * 1e3}$ meV',
 				ha='left', va='center')
 	ani = animation.ArtistAnimation(fig, ims, interval = 50)
-	ani_name = "EF_" + str(int(E_F * 1e3)) + "meV" + ".gif"
+	ani_name = "taup_" + str(tau_p) + ".gif"
 	fig.tight_layout()
-	ani.save('../imgs/EMC_degeneracy/EMC_gif_NoEnergyDependency/' + ani_name, writer='pillow')
-	fig.savefig('../imgs/EMC_degeneracy/EMC_gif_NoEnergyDependency/' + "EF_" + str(int(E_F * 1e3)) + "meV" + "_" + str(int(sim_time_index)))
+	ani.save('../imgs/EMC_degeneracy/EMC_gif_NoEnergyDependency/EF_10meV_taup/' + ani_name, writer='pillow')
+	fig.savefig('../imgs/EMC_degeneracy/EMC_gif_NoEnergyDependency/EF_10meV_taup/' + "taup_" + str(tau_p) + "_" + str(int(sim_time_index)))
 
-_ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC_NoElectricField_gifs)(index) for index in range(len(E_F_arr)))
+_ = joblib.Parallel(n_jobs=-1)(joblib.delayed(EMC_NoElectricField_gifs)(index) for index in range(len(tau_p_arr)))
