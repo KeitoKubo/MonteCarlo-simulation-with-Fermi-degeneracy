@@ -46,8 +46,6 @@ def EMC_NoElectricField_gifs(joblib_index):
 	if partition % 2 == 0:
 		partition -= 1
 	cell_row = partition
-	print("taup: " + str(tau_p) + ", partition" + str(partition) + ", cell row: "
-	    + str(cell_row) + ", E_max: " + str(E_max * 1e3) + ", k_max: " + str(k_max))
 
 	def FD(E):
 		return 1 / (1 + np.exp((E - E_F) / kT))
@@ -179,6 +177,9 @@ def EMC_NoElectricField_gifs(joblib_index):
 	time_index = 1
 	k_bias_index = 0
 	timer = 0
+	print("taup: " + str(tau_p) + ", partition: " + str(partition) + ", cell row: "
+	    + str(cell_row) + ", E_max: " + str(E_max * 1e3) + ", k_max: " + str(k_max) 
+		+ ", delta_time: " + str(delta_t) + ", sim_time: " + str(sim_time))
 
 	def FreeFlight(): # Free Flight process when the grid moves for k_delta
 		nonlocal recent_error_num_e
@@ -246,17 +247,22 @@ def EMC_NoElectricField_gifs(joblib_index):
 					k_arr[:,i] = k_new
 		if k_bias_index % opt_res == 0:
 			FreeFlight()
+			k_bias_index = 0
+			'''
 			time_arr.append(cur_time)
 			vd_val = hbar * np.mean(k_arr, axis=1) / m_star
 			v_drift_arr.append(vd_val)
 			E_mean_arr.append(np.mean(Ei_arr))
+			'''
 		if timer > 1e-12: # plot in every 1ps
 			Addplot()
 			timer = 0
-
+	
+	'''
 	time = np.array(time_arr)
 	v_drift = np.array(v_drift_arr)
 	energy = np.array(E_mean_arr)
+	'''
 
 	### Plot Animation
 	ax.set_xlabel(r'Energy (meV)')
